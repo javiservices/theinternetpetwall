@@ -1,0 +1,223 @@
+import React, { useEffect, useState, useRef } from "react";
+import { X, Download, Share2, Check, Sparkles, Loader2 } from "lucide-react";
+import { generatePetPassportDataUrl } from "../utils/passportCanvas";
+import { useTranslation } from "../i18n/LanguageContext";
+
+export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
+  const { t } = useTranslation();
+  const [passportUrl, setPassportUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // 3D Tilt State
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    if (!pet) return;
+    let isMounted = true;
+    setLoading(true);
+
+    generatePetPassportDataUrl(pet)
+      .then((url) => {
+        if (isMounted) {
+          setPassportUrl(url);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error generating passport canvas:", err);
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pet]);
+
+  if (!pet) return null;
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotX = ((y - centerY) / centerY) * -10; // max -10 to +10 deg
+    const rotY = ((x - centerX) / centerX) * 10;
+
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
+
+    setTilt({ x: rotX, y: rotY });
+    setGlare({ x: glareX, y: glareY, opacity: 0.4 });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+    setGlare({ x: 50, y: 50, opacity: 0 });
+  };
+
+  const handleDownload = () => {
+    if (!passportUrl) return;
+    const link = document.createElement("a");
+    link.href = passportUrl;
+    link.download = `${pet.name.replace(/\s+/g, "_")}_Pasaporte_Oficial.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleShare = async () => {
+    const shareText = `¡He inmortalizado a ${pet.name} en The Internet Pet Wall! 🐾 (${pet.code}):`;
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Pasaporte Oficial de ${pet.name}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      alert("Enlace copiado al portapapeles");
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1200 }}>
+      <div
+        className="modal-content passport-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        style={{ maxWidth: "680px" }}
+      >
+        <button
+          className="modal-close-btn"
+          onClick={onClose}
+          aria-label={t("close_modal")}
+        >
+          <X size={18} />
+        </button>
+
+        <div style={{ padding: "0 36px", marginBottom: "14px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-gold-dark)", marginBottom: "6px", fontWeight: 700, fontSize: "0.85rem" }}>
+            <Sparkles size={16} />
+            <span>{t("doc_verified")} · Efecto Holográfico 3D</span>
+          </div>
+
+          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", fontWeight: 800, marginBottom: "4px" }}>
+            {t("passport_of")} {pet.name}
+          </h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>
+            {pet.code} • {t("passport_sub")}
+          </p>
+        </div>
+
+        {/* 3D Interactive Perspective Wrap */}
+        <div
+          ref={cardRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className="passport-img-wrap"
+          style={{
+            perspective: "1000px",
+            transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+            transition: "transform 0.1s ease-out, box-shadow 0.2s ease",
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: "16px",
+            boxShadow: `0 ${15 + Math.abs(tilt.x) * 2}px ${30 + Math.abs(tilt.y) * 2}px rgba(0,0,0,0.25)`,
+            cursor: "grab",
+          }}
+        >
+          {loading ? (
+            <div style={{ padding: "80px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+              <Loader2 size={36} className="animate-spin" color="#D97706" />
+              <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                {t("generating_passport")}
+              </p>
+            </div>
+          ) : (
+            <>
+              <img
+                src={passportUrl}
+                alt={`Pasaporte oficial de ${pet.name}`}
+                className="passport-preview-img"
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+
+              {/* Holographic dynamic light reflection sheen */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255, 235, 150, ${glare.opacity}) 0%, rgba(255, 255, 255, 0) 70%)`,
+                  mixBlendMode: "color-dodge",
+                  transition: "opacity 0.2s ease",
+                }}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Primary and Viral Actions */}
+        <div className="passport-actions" style={{ flexWrap: "wrap", marginTop: "20px" }}>
+          <button
+            className="btn-primary"
+            onClick={handleDownload}
+            disabled={loading || !passportUrl}
+            id="download-passport-btn"
+          >
+            <Download size={16} />
+            <span>{t("download_btn")}</span>
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={handleShare}
+            id="share-passport-btn"
+          >
+            {copied ? <Check size={16} color="#10B981" /> : <Share2 size={16} />}
+            <span>{copied ? t("copied_btn") : t("share_btn")}</span>
+          </button>
+
+          {onOpenStory && (
+            <button
+              className="btn-secondary"
+              onClick={() => onOpenStory(pet)}
+              title="Generar Story 9:16 para Instagram"
+            >
+              <span>📱 Crear Story</span>
+            </button>
+          )}
+
+          {onOpenCollarTag && (
+            <button
+              className="btn-secondary"
+              onClick={() => onOpenCollarTag(pet)}
+              title="Generar Chapa imprimible con QR para collar"
+            >
+              <span>🏷️ Chapa Collar QR</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
