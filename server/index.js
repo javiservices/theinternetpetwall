@@ -17,7 +17,8 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const CLIENT_URL = process.env.CLIENT_URL 
+  || (process.env.NODE_ENV === "production" ? "https://theinternetpetwall.com" : "http://localhost:5173");
 
 // 1. Initialize Stripe
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -168,6 +169,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
       ? "Inscripción perpetua en el Gran Muro + Placa Oficial + Marco Dorado VIP con brillo tenue + Pasaporte Oficial 3D"
       : "Inscripción perpetua en el Gran Muro + Placa Oficial única + Pasaporte Oficial descargable";
 
+    const baseUrl = req.headers.origin || CLIENT_URL;
+
     // Create session in Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -186,8 +189,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `${CLIENT_URL}/wall?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${CLIENT_URL}/wall?payment=cancelled`,
+      success_url: `${baseUrl}/wall?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/wall?payment=cancelled`,
       // Attach verified pet metadata to session
       metadata: {
         name: petData.name.slice(0, 100),
