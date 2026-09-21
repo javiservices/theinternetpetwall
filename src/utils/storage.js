@@ -1,6 +1,6 @@
 import { INITIAL_PETS } from "../data/initialPets";
 
-const STORAGE_KEY = "internet_pet_wall_pets_v2";
+const STORAGE_KEY = "internet_pet_wall_pets_v3";
 const MY_PETS_KEY = "internet_pet_wall_my_pets";
 const REPORTS_KEY = "internet_pet_wall_reports";
 const ADMIN_PIN_KEY = "internet_pet_wall_admin_pin";
@@ -9,29 +9,16 @@ export function getSavedPets() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PETS));
-      return INITIAL_PETS;
+      return [];
     }
     const parsed = JSON.parse(data);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      // Ensure test pet Kira is present at the front with current photo
-      const testPet = INITIAL_PETS.find((p) => p.id === "pet-test");
-      const hasTestPet = parsed.some((p) => p.id === "pet-test");
-      if (!hasTestPet && testPet) {
-        const merged = [testPet, ...parsed];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-        return merged;
-      } else if (hasTestPet && testPet) {
-        const updated = parsed.map((p) => (p.id === "pet-test" ? { ...p, photoUrl: testPet.photoUrl } : p));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return updated;
-      }
+    if (Array.isArray(parsed)) {
       return parsed;
     }
-    return INITIAL_PETS;
+    return [];
   } catch (err) {
     console.error("Error reading from localStorage:", err);
-    return INITIAL_PETS;
+    return [];
   }
 }
 
