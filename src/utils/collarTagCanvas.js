@@ -5,12 +5,6 @@ import { parsePetLocation } from "../data/worldLocations";
  * Ultra-realistic Physical Collar Tag Generator (3x3 cm / 30 mm)
  * Engineered specifically for 3D Printing (0.4mm nozzle FDM / SLA resin),
  * laser engraving, and real-life everyday durability.
- *
- * Design Principles for 3D Printing at 30mm:
- * 1. Zero micro-text: Eliminates unprintable 1mm micro-text that slicers ignore or blur.
- * 2. High-legibility hero typography: Pet name and ID code with minimum stroke width > 0.45 mm.
- * 3. Robust suspension eyelet: Monolithic lug with >2.2 mm solid wall around Ø 3.8 mm hole.
- * 4. Optimized QR code: Generates large ~0.8 mm modules (Level M) for reliable scanning on printed plastic.
  */
 
 function loadSafeImage(src) {
@@ -139,7 +133,6 @@ function drawPhysicalContourPath(ctx, cx, cy, radius, shape = "circle") {
 
 /**
  * High-contrast 3D printable cameo relief for real pet photo.
- * Ensures clean, embossed features without tiny micro-dots.
  */
 function drawMonochromeReliefPhoto(ctx, petPhoto, cx, cy, photoR) {
   const size = Math.round(photoR * 2);
@@ -247,18 +240,18 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
 
   // Material Body Fill
   if (finish === "gold") {
-    const goldGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR, cx + mainR, mainCy + mainR);
-    goldGrad.addColorStop(0, "#FFF9D2");
-    goldGrad.addColorStop(0.2, "#F5C842");
-    goldGrad.addColorStop(0.48, "#C68B1C");
-    goldGrad.addColorStop(0.72, "#FDE047");
-    goldGrad.addColorStop(0.9, "#946200");
-    goldGrad.addColorStop(1, "#451A03");
+    const goldGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR * 1.1, cx + mainR, mainCy + mainR * 1.1);
+    goldGrad.addColorStop(0, "#FFFCE8");
+    goldGrad.addColorStop(0.18, "#F5D061");
+    goldGrad.addColorStop(0.42, "#D49B28");
+    goldGrad.addColorStop(0.68, "#FDE68A");
+    goldGrad.addColorStop(0.85, "#A16207");
+    goldGrad.addColorStop(1, "#592E04");
     ctx.fillStyle = goldGrad;
   } else if (finish === "silver") {
-    const silverGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR, cx + mainR, mainCy + mainR);
+    const silverGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR * 1.1, cx + mainR, mainCy + mainR * 1.1);
     silverGrad.addColorStop(0, "#FFFFFF");
-    silverGrad.addColorStop(0.25, "#F1F5F9");
+    silverGrad.addColorStop(0.25, "#F8FAFC");
     silverGrad.addColorStop(0.5, "#94A3B8");
     silverGrad.addColorStop(0.75, "#CBD5E1");
     silverGrad.addColorStop(1, "#334155");
@@ -268,7 +261,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     ctx.fillStyle = "#0A0F1D";
   } else {
     // Luxury Onyx Black Enamel
-    const blackGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR, cx + mainR, mainCy + mainR);
+    const blackGrad = ctx.createLinearGradient(cx - mainR, mainCy - mainR * 1.1, cx + mainR, mainCy + mainR * 1.1);
     blackGrad.addColorStop(0, "#1E293B");
     blackGrad.addColorStop(0.5, "#0F172A");
     blackGrad.addColorStop(1, "#020617");
@@ -281,53 +274,50 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
 
   // 3. Raised Outer Beveled Rim (Solid 0.6mm wall)
   ctx.lineWidth = size * 0.020;
-  ctx.strokeStyle = finish === "gold" ? "#F59E0B" : finish === "silver" ? "#E2E8F0" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
+  ctx.strokeStyle = finish === "gold" ? "#D97706" : finish === "silver" ? "#CBD5E1" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
   drawPhysicalContourPath(ctx, cx, mainCy, mainR, shape);
   ctx.stroke();
 
-  // Inner inset groove (embossed frame)
-  ctx.lineWidth = size * 0.007;
-  ctx.strokeStyle = finish === "3dprint" ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.22)";
-  if (shape === "circle") {
-    ctx.beginPath();
-    ctx.arc(cx, mainCy, mainR - 24, 0, Math.PI * 2);
-    ctx.stroke();
-  } else {
-    roundRect(ctx, geom.leftX + 24, geom.topY + 24, mainR * 2 - 48, mainR * 2 - 48, geom.cornerR - 10);
-    ctx.stroke();
-  }
+  // Inner concentric inset groove: flows smoothly around ear and perimeter without crossing neck!
+  ctx.lineWidth = size * 0.006;
+  ctx.strokeStyle = finish === "3dprint" ? "rgba(255,255,255,0.35)" : finish === "gold" ? "rgba(180, 83, 9, 0.35)" : "rgba(0,0,0,0.22)";
+  drawPhysicalContourPath(ctx, cx, mainCy, mainR - 22, shape);
+  ctx.stroke();
 
-  // 4. Perforated Collar Suspension Eyelet (Punched hole with clean bevel)
-  // Hole background
+  // 4. Perforated Collar Suspension Eyelet (Punched hole with clean concentric bevel)
   ctx.fillStyle = finish === "3dprint" ? "#000000" : "#E2E8F0";
   ctx.beginPath();
   ctx.arc(cx, earCy, holeR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Hole bevel rim
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = finish === "gold" ? "#B45309" : finish === "silver" ? "#64748B" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = finish === "gold" ? "#F59E0B" : finish === "silver" ? "#94A3B8" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
   ctx.stroke();
 
   // ---------------------------------------------------------------------------
-  // 5. CONTENT: CARA A (ANVERSO) - HERO TYPOGRAPHY & CHUNKY 3D RELIEFS
-  // Designed so every single feature is > 0.45 mm stroke width for clean 3D slicing.
+  // 5. CONTENT: CARA A (ANVERSO) - PERFECTLY BALANCED HERO LAYOUT
   // ---------------------------------------------------------------------------
   if (side === "front") {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // 5A. Pet Photo Medallion (Spacious ~17mm physical diameter)
-    const photoCenterY = mainCy - mainR * 0.32;
+    // 5A. Pet Photo Medallion (Centered, ~17mm physical diameter)
+    const photoCenterY = mainCy - mainR * 0.28;
     const photoR = mainR * 0.38;
 
-    // Bevel outer ring
-    ctx.lineWidth = size * 0.018;
-    ctx.strokeStyle = finish === "gold" ? "#F59E0B" : finish === "silver" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
-    ctx.fillStyle = finish === "3dprint" ? "#0F172A" : "#FFFFFF";
+    // Dual-ring coin bezel
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = finish === "gold" ? "#D97706" : finish === "silver" ? "#94A3B8" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
+    ctx.fillStyle = finish === "3dprint" ? "#0A0F1D" : "#FFFFFF";
     ctx.beginPath();
     ctx.arc(cx, photoCenterY, photoR, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = finish === "gold" ? "#FDE047" : finish === "silver" ? "#F1F5F9" : finish === "3dprint" ? "#FFFFFF" : "#FDE047";
+    ctx.beginPath();
+    ctx.arc(cx, photoCenterY, photoR - 5, 0, Math.PI * 2);
     ctx.stroke();
 
     if (petPhoto && finish === "3dprint") {
@@ -335,7 +325,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     } else if (petPhoto) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(cx, photoCenterY, photoR - size * 0.007, 0, Math.PI * 2);
+      ctx.arc(cx, photoCenterY, photoR - 7, 0, Math.PI * 2);
       ctx.clip();
 
       const aspect = petPhoto.width / petPhoto.height;
@@ -356,86 +346,87 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
       drawSilhouettePlaceholder(ctx, cx, photoCenterY, photoR);
     }
 
-    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Printable with 3 Perimeters)
+    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Perfectly Centered)
     const nameY = photoCenterY + photoR + size * 0.062;
-    ctx.fillStyle = finish === "black" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#0F172A";
+    ctx.fillStyle = finish === "black" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#1C1917";
     ctx.font = `900 ${Math.round(size * 0.088)}px 'Outfit', sans-serif`;
-    ctx.letterSpacing = "1.5px";
+    ctx.letterSpacing = "1.8px";
     const displayName = (pet.name || "Mascota").toUpperCase().slice(0, 10);
     ctx.fillText(displayName, cx, nameY);
 
-    // 5C. Unified Official Code Capsule (Robust 14.5 mm physical width)
-    const pillY = nameY + size * 0.072;
-    const pillW = size * 0.48;
-    const pillH = size * 0.068;
+    // 5C. Luxury Enamel ID Capsule (PET-0002-ES)
+    const pillY = nameY + size * 0.070;
+    const pillW = size * 0.46;
+    const pillH = size * 0.065;
 
-    ctx.fillStyle = finish === "black" ? "rgba(212, 175, 55, 0.25)" : finish === "3dprint" ? "#000000" : "rgba(0, 0, 0, 0.09)";
-    ctx.strokeStyle = finish === "black" ? "#F59E0B" : finish === "3dprint" ? "#FFFFFF" : "rgba(0, 0, 0, 0.25)";
+    // Enamel background with crisp border
+    ctx.fillStyle = finish === "3dprint" ? "#000000" : "#18181B";
+    ctx.strokeStyle = finish === "3dprint" ? "#FFFFFF" : finish === "gold" ? "#F59E0B" : finish === "silver" ? "#CBD5E1" : "#D4AF37";
     ctx.lineWidth = finish === "3dprint" ? 3.5 : 2.0;
     roundRect(ctx, cx - pillW / 2, pillY - pillH / 2, pillW, pillH, pillH / 2);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
+    ctx.fillStyle = finish === "3dprint" ? "#FFFFFF" : finish === "silver" ? "#FFFFFF" : "#FDE047";
     ctx.font = `900 ${Math.round(size * 0.038)}px monospace`;
     ctx.letterSpacing = "2px";
     ctx.fillText(pet.code || "PET-0000-ES", cx, pillY);
 
-    // 5D. Location (Bold, Uppercase, Solid Line-width)
+    // 5D. Location (Clean, Bold, Spaced, Ample Bottom Margin)
     const loc = parsePetLocation(pet.city, pet);
     const locY = pillY + size * 0.058;
     ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
-    ctx.font = `800 ${Math.round(size * 0.034)}px 'Plus Jakarta Sans', sans-serif`;
-    ctx.letterSpacing = "3px";
+    ctx.font = `800 ${Math.round(size * 0.032)}px 'Plus Jakarta Sans', sans-serif`;
+    ctx.letterSpacing = "3.5px";
     const locationStr = (loc.cityName || pet.city || "ESPAÑA").toUpperCase();
     ctx.fillText(locationStr, cx, locY);
   }
 
   // ---------------------------------------------------------------------------
   // 6. CONTENT: CARA B (REVERSO - RESCUE QR CODE)
-  // Large 0.88 mm modules for instant phone camera scanning even on 3D prints.
+  // Perfectly spaced intervals: Header -> Gap -> QR -> Gap -> CTA -> Link
   // ---------------------------------------------------------------------------
   if (side === "back") {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // 6A. Emergency Header
-    const sosY = mainCy - mainR * 0.65;
-    ctx.fillStyle = finish === "3dprint" ? "#FFFFFF" : finish === "black" ? "#EF4444" : "#DC2626";
-    ctx.font = `900 ${Math.round(size * 0.040)}px 'Plus Jakarta Sans', sans-serif`;
+    // 6A. Emergency Header (Well above the QR box)
+    const sosY = mainCy - mainR * 0.68;
+    ctx.fillStyle = finish === "3dprint" ? "#FFFFFF" : "#DC2626";
+    ctx.font = `900 ${Math.round(size * 0.036)}px 'Plus Jakarta Sans', sans-serif`;
     ctx.letterSpacing = "2px";
     ctx.fillText("SOS · ESCÁNAME", cx, sosY);
 
     // 6B. High-Contrast QR Code (Level M = ~25x25 large chunky modules)
-    const qrSize = mainR * 1.12;
-    const qrY = mainCy - mainR * 0.06;
+    const qrSize = mainR * 0.94;
+    const qrY = mainCy - mainR * 0.08;
 
     ctx.fillStyle = "#FFFFFF";
     ctx.strokeStyle = finish === "gold" ? "#F59E0B" : finish === "silver" ? "#94A3B8" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
-    ctx.lineWidth = size * 0.014;
-    roundRect(ctx, cx - qrSize / 2, qrY - qrSize / 2, qrSize, qrSize, size * 0.035);
+    ctx.lineWidth = size * 0.012;
+    roundRect(ctx, cx - qrSize / 2, qrY - qrSize / 2, qrSize, qrSize, size * 0.030);
     ctx.fill();
     ctx.stroke();
 
     if (qrDataUrl) {
       const qrImg = await loadSafeImage(qrDataUrl);
       if (qrImg) {
-        const qrPadding = size * 0.022;
+        const qrPadding = size * 0.020;
         ctx.drawImage(qrImg, cx - qrSize / 2 + qrPadding, qrY - qrSize / 2 + qrPadding, qrSize - qrPadding * 2, qrSize - qrPadding * 2);
       }
     }
 
     // 6C. Call To Action Below QR
-    const ctaY = qrY + qrSize / 2 + size * 0.054;
+    const ctaY = qrY + qrSize / 2 + size * 0.052;
     ctx.fillStyle = finish === "black" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#0F172A";
-    ctx.font = `800 ${Math.round(size * 0.032)}px 'Plus Jakarta Sans', sans-serif`;
-    ctx.letterSpacing = "1.2px";
-    ctx.fillText("ESCÁNAME CON LA CÁMARA", cx, ctaY);
+    ctx.font = `800 ${Math.round(size * 0.030)}px 'Plus Jakarta Sans', sans-serif`;
+    ctx.letterSpacing = "1.5px";
+    ctx.fillText("ESCÁNAME CON EL MÓVIL", cx, ctaY);
 
-    // 6D. Contact / Web Link
-    const linkY = ctaY + size * 0.048;
-    ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#92400E";
-    ctx.font = `800 ${Math.round(size * 0.028)}px monospace`;
+    // 6D. Contact / Web Link (Guaranteed inside boundary with >120px margin to bottom rim)
+    const linkY = ctaY + size * 0.046;
+    ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
+    ctx.font = `800 ${Math.round(size * 0.026)}px monospace`;
     const contactText = pet.instagram ? `@${pet.instagram.replace(/^@/, "")}` : "theinternetpetwall.com";
     ctx.fillText(contactText, cx, linkY);
   }
@@ -728,8 +719,8 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
       const pathMatch = qrRaw.match(/<path[^>]*stroke=\"#000000\"[^>]*d=\"([^\"]+)\"/);
       if (pathMatch) {
         qrSvgContent = `
-        <rect x="85" y="115" width="130" height="130" rx="10" fill="#FFFFFF"/>
-        <g transform="translate(90, 120) scale(4.0)">
+        <rect x="88" y="108" width="124" height="124" rx="8" fill="#FFFFFF"/>
+        <g transform="translate(92, 112) scale(3.85)">
           <path d="${pathMatch[1]}" stroke="#000000" stroke-width="1"/>
         </g>`;
       }
@@ -762,33 +753,33 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
       side === "front"
         ? `
     <!-- Photo Medallion Rim & Cameo -->
-    <circle cx="${cx}" cy="138" r="44" fill="none" stroke="#FFFFFF" stroke-width="4"/>
-    <circle cx="${cx}" cy="148" r="18" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx - 18}" cy="130" r="7" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx - 7}" cy="120" r="7.5" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx + 7}" cy="120" r="7.5" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx + 18}" cy="130" r="7" fill="#FFFFFF" stroke="none"/>
+    <circle cx="${cx}" cy="142" r="44" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+    <circle cx="${cx}" cy="152" r="18" fill="#FFFFFF" stroke="none"/>
+    <circle cx="${cx - 18}" cy="134" r="7" fill="#FFFFFF" stroke="none"/>
+    <circle cx="${cx - 7}" cy="124" r="7.5" fill="#FFFFFF" stroke="none"/>
+    <circle cx="${cx + 7}" cy="124" r="7.5" fill="#FFFFFF" stroke="none"/>
+    <circle cx="${cx + 18}" cy="134" r="7" fill="#FFFFFF" stroke="none"/>
 
     <!-- Hero Pet Name (Thick, printable stroke) -->
-    <text x="${cx}" y="204" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', Arial, sans-serif" font-weight="900" font-size="24" letter-spacing="1">${petName}</text>
+    <text x="${cx}" y="206" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', Arial, sans-serif" font-weight="900" font-size="24" letter-spacing="1">${petName}</text>
 
     <!-- Code Capsule -->
-    <rect x="80" y="216" width="140" height="20" rx="10" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
-    <text x="${cx}" y="230" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="900" font-size="11.5" letter-spacing="1.5">${petCode}</text>
+    <rect x="85" y="218" width="130" height="20" rx="10" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
+    <text x="${cx}" y="232" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="900" font-size="11" letter-spacing="1.5">${petCode}</text>
 
     <!-- City / Country -->
-    <text x="${cx}" y="250" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2">${petCity}</text>
+    <text x="${cx}" y="252" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2">${petCity}</text>
     `
         : `
     <!-- Back Header -->
-    <text x="${cx}" y="98" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="11" letter-spacing="1.2">SOS · ESCÁNAME</text>
+    <text x="${cx}" y="92" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="11" letter-spacing="1.2">SOS · ESCÁNAME</text>
 
     <!-- QR Code -->
     ${qrSvgContent}
 
     <!-- Call to action -->
-    <text x="${cx}" y="264" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.5">ESCÁNAME CON LA CÁMARA</text>
-    <text x="${cx}" y="278" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="800" font-size="8">${contactText}</text>
+    <text x="${cx}" y="252" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.5">ESCÁNAME CON EL MÓVIL</text>
+    <text x="${cx}" y="266" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="800" font-size="8">${contactText}</text>
     `
     }
   </g>
