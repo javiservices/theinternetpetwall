@@ -171,9 +171,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
 
     const baseUrl = req.headers.origin || CLIENT_URL;
 
-    // Create session in Stripe
+    // Create session in Stripe with automatic payment methods (Apple Pay, Google Pay, Cards, etc.)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {

@@ -79,12 +79,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
     }
   };
 
-  // Payment State
-  const [payMethod, setPayMethod] = useState("card");
-  const [cardNumber, setCardNumber] = useState("4242 •••• •••• 4242");
-  const [cardExp, setCardExp] = useState("12/28");
-  const [cardCvc, setCardCvc] = useState("888");
-  const [bizumPhone, setBizumPhone] = useState("612 345 678");
+  // Payment & Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle local file upload with automated Canvas compression & Supabase CDN upload
@@ -195,6 +190,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
   };
 
   const price = isVip ? "2,00€" : "1,00€";
+  const cityDisplay = isCustomCity && customCity.trim() ? customCity.trim() : selectedCity;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -704,7 +700,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
           </div>
         )}
 
-        {/* STEP 4: PAYMENT CHECKOUT */}
+        {/* STEP 4: ORDER SUMMARY & SECURE PAYMENT */}
         {step === 4 && (
           <div>
             <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", marginBottom: "6px" }}>
@@ -714,126 +710,164 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
               {t("step4_sub")}
             </p>
 
-            <div className="payment-box">
-              <div className="payment-summary">
-                <span>{t("total_to_pay")}</span>
-                <span style={{ color: "var(--accent-gold-dark)", fontSize: "1.3rem" }}>{price}</span>
-              </div>
-
-              {/* Causa Solidaria Badge */}
-              <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "var(--radius-sm)", padding: "10px 12px", margin: "14px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "1.3rem" }}>🐾</span>
-                <div>
-                  <span style={{ fontWeight: 800, fontSize: "0.82rem", color: "#065F46", display: "block" }}>
-                    Causa Solidaria: 1 Inscripción = 1 Huella de Ayuda
+            {/* Pet Summary Card */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                padding: "14px 16px",
+                marginBottom: "14px",
+              }}
+            >
+              <img
+                src={photoUrl || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80"}
+                alt={name || "Mascota"}
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "var(--radius-sm)",
+                  objectFit: "cover",
+                  border: isVip ? "2px solid var(--accent-gold)" : "1px solid var(--border-subtle)",
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text-primary)" }}>
+                    {name || "Tu Mascota"}
                   </span>
-                  <span style={{ fontSize: "0.75rem", color: "#047857" }}>
-                    El 20% de tu aportación se dona este mes a protectoras y refugios para alimentar y cuidar a animales sin hogar.
-                  </span>
+                  {isVip && (
+                    <span
+                      style={{
+                        background: "linear-gradient(135deg, #FEF08A, #F59E0B)",
+                        color: "#78350F",
+                        fontSize: "0.7rem",
+                        fontWeight: 800,
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      VIP
+                    </span>
+                  )}
                 </div>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>
+                  {breed || (type === "dog" ? "Perrito" : type === "cat" ? "Gatito" : "Mascota")} • {cityDisplay}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.78rem",
+                    color: isVip ? "var(--accent-gold-dark)" : "var(--accent-teal)",
+                    fontWeight: 700,
+                    margin: "2px 0 0 0",
+                  }}
+                >
+                  {isVip ? "★ Pase Golden VIP (Eterno)" : "✓ Pase Estándar Oficial (Eterno)"}
+                </p>
               </div>
-
-              {/* Payment Tabs */}
-              <div className="payment-methods-tabs">
-                <button
-                  type="button"
-                  className={`pay-tab-btn ${payMethod === "card" ? "active" : ""}`}
-                  onClick={() => setPayMethod("card")}
-                >
-                  <CreditCard size={15} />
-                  <span>{t("tab_card")}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`pay-tab-btn ${payMethod === "express" ? "active" : ""}`}
-                  onClick={() => setPayMethod("express")}
-                >
-                  <span>🍎 Apple / GPay</span>
-                </button>
-                <button
-                  type="button"
-                  className={`pay-tab-btn ${payMethod === "bizum" ? "active" : ""}`}
-                  onClick={() => setPayMethod("bizum")}
-                >
-                  <Smartphone size={15} />
-                  <span>{t("tab_bizum")}</span>
-                </button>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--accent-gold-dark)" }}>
+                  {price}
+                </span>
+                <span style={{ display: "block", fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                  pago único
+                </span>
               </div>
+            </div>
 
-              {/* Method Card */}
-              {payMethod === "card" && (
-                <div>
-                  <div className="form-group">
-                    <label className="form-label">{t("card_number")}</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-row-2col">
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">{t("card_exp")}</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={cardExp}
-                        onChange={(e) => setCardExp(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">{t("card_cvc")}</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Causa Solidaria Badge */}
+            <div
+              style={{
+                background: "rgba(16, 185, 129, 0.08)",
+                border: "1px solid rgba(16, 185, 129, 0.25)",
+                borderRadius: "var(--radius-sm)",
+                padding: "10px 12px",
+                marginBottom: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <span style={{ fontSize: "1.3rem" }}>🐾</span>
+              <div>
+                <span style={{ fontWeight: 800, fontSize: "0.82rem", color: "#065F46", display: "block" }}>
+                  Causa Solidaria: 1 Inscripción = 1 Huella de Ayuda
+                </span>
+                <span style={{ fontSize: "0.75rem", color: "#047857" }}>
+                  El 20% de tu aportación se dona este mes a protectoras y refugios para alimentar y cuidar a animales sin hogar.
+                </span>
+              </div>
+            </div>
 
-              {/* Method Express */}
-              {payMethod === "express" && (
-                <div style={{ textAlign: "center", padding: "16px 0" }}>
-                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
-                    1-Click Apple Pay / Google Pay.
-                  </p>
-                  <div
+            {/* Stripe Payment Gateway Callout */}
+            <div
+              style={{
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                padding: "16px",
+                marginBottom: "16px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "10px",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                }}
+              >
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                  Métodos de pago en pasarela:
+                </span>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span
                     style={{
                       background: "#000000",
                       color: "#FFFFFF",
-                      padding: "12px",
-                      borderRadius: "var(--radius-md)",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.75rem",
                       fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                      cursor: "pointer",
                     }}
                   >
-                    <span>Apple Pay / Google Pay ({price})</span>
-                  </div>
+                     Pay
+                  </span>
+                  <span
+                    style={{
+                      background: "#FFFFFF",
+                      color: "#3C4043",
+                      border: "1px solid #DADCE0",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    G Pay
+                  </span>
+                  <span
+                    style={{
+                      background: "#1E293B",
+                      color: "#FFFFFF",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    💳 Tarjetas
+                  </span>
                 </div>
-              )}
-
-              {/* Method Bizum */}
-              {payMethod === "bizum" && (
-                <div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Teléfono móvil Bizum</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={bizumPhone}
-                      onChange={(e) => setBizumPhone(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
+              </div>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.45 }}>
+                Al pulsar en el botón inferior, accederás a la pasarela cifrada y oficial de <strong>Stripe</strong>. Podrás pagar de forma cómoda e instantánea en 1 clic con <strong>Apple Pay</strong>, <strong>Google Pay</strong> o con tu <strong>tarjeta</strong> bancaria.
+              </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10B981", fontSize: "0.82rem", marginBottom: "14px" }}>
