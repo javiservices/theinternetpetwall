@@ -68,6 +68,41 @@ export async function downloadDataUrl(dataUrl, filename) {
   }
 }
 
+export async function downloadBlob(blob, filename) {
+  if (!blob) {
+    console.error("downloadBlob: No blob provided");
+    return false;
+  }
+
+  try {
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+      URL.revokeObjectURL(blobUrl);
+    }, 1500);
+
+    return true;
+  } catch (err) {
+    console.error("downloadBlob failed:", err);
+    return false;
+  }
+}
+
+export async function downloadSvgString(svgString, filename) {
+  if (!svgString) return false;
+  const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+  return downloadBlob(blob, filename);
+}
+
 /**
  * Native Web Share API helper for mobile sharing images directly to WhatsApp,
  * Instagram Stories, AirDrop, or saving to Camera Roll.

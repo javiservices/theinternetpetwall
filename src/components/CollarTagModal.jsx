@@ -10,12 +10,18 @@ import {
   Check,
   Layers,
   ShieldCheck,
+  Box,
 } from "lucide-react";
 import {
   generateCollarTagDataUrl,
   generatePrintableTagSheetDataUrl,
+  generateCollarTagSvg,
 } from "../utils/collarTagCanvas";
-import { downloadDataUrl, shareImageFile } from "../utils/downloadHelper";
+import {
+  downloadDataUrl,
+  downloadSvgString,
+  shareImageFile,
+} from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
 
 export function CollarTagModal({ pet, onClose }) {
@@ -120,7 +126,26 @@ export function CollarTagModal({ pet, onClose }) {
     }
   };
 
-  // 3. Print
+  // 3. Download Vector SVG for 3D Printing (Bambu / Prusa / Orca / Tinkercad)
+  const handleDownloadSvg = async () => {
+    setIsDownloading(true);
+    try {
+      const svgString = await generateCollarTagSvg(pet, { shape, side: viewSide });
+      const filename = `Chapa_${pet.name}_${pet.code}_3x3cm_${viewSide}.svg`;
+      const ok = await downloadSvgString(svgString, filename);
+      if (ok) {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Error generating SVG 3D:", err);
+      alert("No se pudo generar el modelo vectorial SVG 3D.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // 4. Print
   const handlePrint = () => {
     window.print();
   };
@@ -486,14 +511,14 @@ export function CollarTagModal({ pet, onClose }) {
         )}
 
         {/* Actions Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
           {/* Button 1: Download Active Medal View */}
           <button
             type="button"
             className="btn-primary"
             onClick={handleDownloadSingle}
             disabled={isGenerating || isDownloading}
-            style={{ justifyContent: "center", padding: "10px 14px", fontSize: "0.85rem" }}
+            style={{ justifyContent: "center", padding: "10px 12px", fontSize: "0.83rem" }}
           >
             {isDownloading ? (
               <Loader2 size={16} className="animate-spin" />
@@ -503,7 +528,30 @@ export function CollarTagModal({ pet, onClose }) {
             <span>Descargar Chapa HD</span>
           </button>
 
-          {/* Button 2: Download Printable 3x3 cm Sheet */}
+          {/* Button 2: Download Vector SVG for 3D Printing */}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleDownloadSvg}
+            disabled={isGenerating || isDownloading}
+            style={{
+              justifyContent: "center",
+              padding: "10px 12px",
+              fontSize: "0.83rem",
+              borderColor: finish === "3dprint" ? "#2563EB" : "var(--border-color)",
+              background: finish === "3dprint" ? "rgba(37, 99, 235, 0.12)" : "var(--bg-surface)",
+              color: finish === "3dprint" ? "#2563EB" : "var(--text-primary)",
+              fontWeight: 800,
+            }}
+            title="Descarga el modelo vectorial .SVG listo para laminar y extruir en Bambu Studio, PrusaSlicer, Orca o Tinkercad"
+          >
+            <Box size={16} color={finish === "3dprint" ? "#2563EB" : "currentColor"} />
+            <span>Modelo SVG 3D (.svg)</span>
+          </button>
+        </div>
+
+        {/* Secondary Row: Printable Sheet & Direct Print */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "10px", marginBottom: "12px" }}>
           <button
             type="button"
             className="btn-secondary"
@@ -511,30 +559,30 @@ export function CollarTagModal({ pet, onClose }) {
             disabled={isGenerating || isDownloading}
             style={{
               justifyContent: "center",
-              padding: "10px 14px",
-              fontSize: "0.85rem",
+              padding: "9px 12px",
+              fontSize: "0.80rem",
               borderColor: "var(--accent-gold)",
               color: "var(--accent-gold-dark)",
             }}
-            title="Descarga la plantilla con anverso y reverso para recortar y plastificar a tamaño real"
+            title="Descarga la plantilla con anverso y reverso para recortar y plastificar a tamaño real (3x3 cm)"
           >
-            <Layers size={16} />
+            <Layers size={15} />
             <span>Plantilla Imprimible (3x3)</span>
           </button>
-        </div>
 
-        {/* Secondary Row: Print and Share */}
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
           <button
             type="button"
             className="btn-secondary"
             onClick={handlePrint}
-            style={{ flex: 1, justifyContent: "center", fontSize: "0.82rem", padding: "8px 12px" }}
+            style={{ justifyContent: "center", fontSize: "0.80rem", padding: "9px 12px" }}
           >
             <Printer size={15} />
             <span>Imprimir Directo</span>
           </button>
+        </div>
 
+        {/* Third Row: Share & Close */}
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
           {navigator.share && (
             <button
               type="button"
