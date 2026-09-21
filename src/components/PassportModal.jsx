@@ -133,7 +133,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
         onTouchEnd={handleTouchEnd}
         role="dialog"
         aria-modal="true"
-        style={{ maxWidth: "680px" }}
+        style={{ maxWidth: "520px" }}
       >
         {/* Mobile drag handle */}
         <div className="modal-drag-indicator mobile-only" aria-hidden="true">
@@ -147,19 +147,19 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
           aria-label={t("close_modal")}
           title={t("close_modal")}
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div style={{ padding: "0 36px", marginBottom: "14px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-gold-dark)", marginBottom: "6px", fontWeight: 700, fontSize: "0.85rem" }}>
-            <Sparkles size={16} />
+        <div style={{ padding: "0 28px", marginBottom: "10px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-gold-dark)", marginBottom: "4px", fontWeight: 700, fontSize: "0.82rem" }}>
+            <Sparkles size={15} />
             <span>{t("doc_verified")} · Efecto Holográfico 3D</span>
           </div>
 
-          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", fontWeight: 800, marginBottom: "4px" }}>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.45rem", fontWeight: 800, marginBottom: "2px" }}>
             {t("passport_of")} {pet.name}
           </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.84rem" }}>
             {pet.code} • {t("passport_sub")}
           </p>
         </div>
@@ -177,14 +177,20 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             position: "relative",
             overflow: "hidden",
             borderRadius: "16px",
-            boxShadow: `0 ${15 + Math.abs(tilt.x) * 2}px ${30 + Math.abs(tilt.y) * 2}px rgba(0,0,0,0.25)`,
+            boxShadow: `0 ${12 + Math.abs(tilt.x) * 2}px ${24 + Math.abs(tilt.y) * 2}px rgba(0,0,0,0.22)`,
             cursor: "grab",
+            maxHeight: "min(390px, 45vh)",
+            width: "fit-content",
+            margin: "6px auto 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {loading ? (
-            <div style={{ padding: "80px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+            <div style={{ padding: "60px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
               <Loader2 size={36} className="animate-spin" color="#D97706" />
-              <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+              <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", fontWeight: 600 }}>
                 {t("generating_passport")}
               </p>
             </div>
@@ -194,7 +200,14 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
                 src={passportUrl}
                 alt={`Pasaporte oficial de ${pet.name}`}
                 className="passport-preview-img"
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  maxHeight: "min(390px, 45vh)",
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "100%",
+                  objectFit: "contain",
+                  display: "block",
+                }}
               />
 
               {/* Holographic dynamic light reflection sheen */}
@@ -213,12 +226,13 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
         </div>
 
         {/* Primary and Viral Actions */}
-        <div className="passport-actions" style={{ flexWrap: "wrap", marginTop: "20px" }}>
+        <div className="passport-actions" style={{ marginTop: "12px" }}>
           <button
             className="btn-primary"
             onClick={handleDownload}
             disabled={loading || !passportUrl || isDownloading}
             id="download-passport-btn"
+            style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
           >
             {isDownloading ? (
               <Loader2 size={16} className="animate-spin" />
@@ -234,6 +248,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             className="btn-secondary"
             onClick={handleShare}
             id="share-passport-btn"
+            style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
           >
             {copied ? <Check size={16} color="#10B981" /> : <Share2 size={16} />}
             <span>{copied ? t("copied_btn") : t("share_btn")}</span>
@@ -244,6 +259,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
               className="btn-secondary"
               onClick={() => onOpenStory(pet)}
               title="Generar Story 9:16 para Instagram"
+              style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
             >
               <span>📱 Crear Story</span>
             </button>
@@ -254,6 +270,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
               className="btn-secondary"
               onClick={() => onOpenCollarTag(pet)}
               title="Generar Chapa imprimible con QR para collar"
+              style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
             >
               <span>🏷️ Chapa Collar QR</span>
             </button>
@@ -261,11 +278,18 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
 
           <button
             type="button"
-            className="btn-secondary"
+            className="btn-secondary passport-close-btn"
             onClick={onClose}
-            style={{ width: "100%", justifyContent: "center", height: "44px", marginTop: "10px", fontWeight: 600 }}
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              height: "38px",
+              marginTop: "4px",
+              fontWeight: 600,
+              fontSize: "0.84rem",
+            }}
           >
-            <X size={16} />
+            <X size={15} />
             <span>{t("close_modal") || "Cerrar pasaporte"}</span>
           </button>
         </div>

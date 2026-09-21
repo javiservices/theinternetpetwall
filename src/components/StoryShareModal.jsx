@@ -330,7 +330,7 @@ export function StoryShareModal({ pet, onClose }) {
         style={{
           maxWidth: "480px",
           textAlign: "center",
-          padding: "28px 24px max(32px, env(safe-area-inset-bottom, 24px))",
+          padding: "22px 24px max(24px, env(safe-area-inset-bottom, 20px))",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -343,7 +343,7 @@ export function StoryShareModal({ pet, onClose }) {
           <X size={18} />
         </button>
 
-        <div style={{ marginBottom: "16px", padding: "0 36px" }}>
+        <div style={{ marginBottom: "12px", padding: "0 28px" }}>
           <h3 style={{ fontSize: "1.25rem", fontWeight: 800, fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}>
             {t("story_modal_title")}
           </h3>
@@ -359,9 +359,9 @@ export function StoryShareModal({ pet, onClose }) {
         <div
           style={{
             position: "relative",
-            width: "min(225px, calc(45vh * 9 / 16))",
-            height: "min(400px, 45vh)",
-            margin: "0 auto 16px",
+            width: "min(210px, calc(42vh * 9 / 16))",
+            height: "min(375px, 42vh)",
+            margin: "0 auto 14px",
             borderRadius: "16px",
             overflow: "hidden",
             boxShadow: "0 10px 25px rgba(0,0,0,0.3)",

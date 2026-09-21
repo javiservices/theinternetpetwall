@@ -279,6 +279,46 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+/* Global Ultra-Sleek Scrollbars (Replaces ugly default OS scrollbars with arrows) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.65);
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+[data-theme="dark"] html {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 body {
@@ -1460,8 +1500,49 @@ img {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
   position: relative;
   animation: scaleUp 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 16px 0;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.65);
+}
+
+.modal-content::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+[data-theme="dark"] .modal-content {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+[data-theme="dark"] .modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 @keyframes scaleUp {
@@ -2218,29 +2299,40 @@ img {
 /* Passport Preview Modal */
 .passport-modal {
   max-width: 520px;
-  padding: 28px;
+  padding: 24px 26px 20px;
   text-align: center;
+  overflow-y: auto;
 }
 
 .passport-img-wrap {
-  margin: 18px auto 24px;
+  margin: 8px auto 14px;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  max-width: 380px;
+  max-width: min(330px, 80vw);
+  max-height: min(390px, 45vh);
 }
 
 .passport-preview-img {
-  width: 100%;
+  max-height: min(390px, 45vh);
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
   display: block;
+  margin: 0 auto;
 }
 
 .passport-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.passport-actions .passport-close-btn {
+  grid-column: 1 / -1;
 }
 
 /* Footer */
@@ -3518,14 +3610,14 @@ img {
 
   /* Passport Modal on Mobile */
   .passport-modal {
-    padding: 24px 14px 28px;
-    max-height: 85vh;
-    max-height: min(88dvh, calc(100dvh - 44px));
+    padding: 24px 16px max(28px, env(safe-area-inset-bottom, 20px));
+    max-height: min(88dvh, calc(100dvh - 36px));
     overflow-y: auto;
   }
 
   .passport-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 8px;
     width: 100%;
   }
 
@@ -5837,13 +5929,19 @@ img {
 .collar-modal {
   position: relative;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
 }
 
 @media (max-width: 640px) {
   .collar-modal {
-    padding: 24px 18px max(36px, env(safe-area-inset-bottom, 24px)) !important;
+    padding: 22px 16px max(32px, env(safe-area-inset-bottom, 20px)) !important;
     max-height: min(90dvh, calc(100dvh - 24px)) !important;
+  }
+
+  .collar-secondary-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
 

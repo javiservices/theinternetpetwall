@@ -192,7 +192,7 @@ export function CollarTagModal({ pet, onClose }) {
         style={{
           maxWidth: "580px",
           textAlign: "center",
-          padding: "28px 24px max(32px, env(safe-area-inset-bottom, 24px))",
+          padding: "22px 24px max(24px, env(safe-area-inset-bottom, 20px))",
           background: "var(--bg-surface)",
           border: "1px solid var(--border-color)",
           borderRadius: "24px",
@@ -210,28 +210,28 @@ export function CollarTagModal({ pet, onClose }) {
         </button>
 
         {/* Modal Header */}
-        <div style={{ marginBottom: "16px", padding: "0 28px" }}>
+        <div style={{ marginBottom: "12px", padding: "0 24px" }}>
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
-              padding: "4px 12px",
+              padding: "3px 10px",
               borderRadius: "20px",
               background: "rgba(217, 119, 6, 0.12)",
               color: "#D97706",
-              fontSize: "0.78rem",
+              fontSize: "0.76rem",
               fontWeight: 800,
-              marginBottom: "8px",
+              marginBottom: "6px",
             }}
           >
-            <Sparkles size={14} />
+            <Sparkles size={13} />
             <span>Medida Física Real: 3 x 3 cm (30 mm)</span>
           </div>
 
           <h3
             style={{
-              fontSize: "1.35rem",
+              fontSize: "1.3rem",
               fontWeight: 800,
               fontFamily: "var(--font-heading)",
               color: "var(--text-primary)",
@@ -240,7 +240,7 @@ export function CollarTagModal({ pet, onClose }) {
           >
             Chapa Oficial de Collar: {pet.name}
           </h3>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "3px" }}>
             Diseño metálico oficial con QR de rescate directo a su perfil en el muro.
           </p>
         </div>
@@ -250,11 +250,11 @@ export function CollarTagModal({ pet, onClose }) {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "10px",
+            gap: "8px",
             background: "var(--bg-warm)",
-            padding: "12px",
-            borderRadius: "16px",
-            marginBottom: "18px",
+            padding: "10px 12px",
+            borderRadius: "14px",
+            marginBottom: "12px",
             border: "1px solid var(--border-subtle)",
           }}
         >
@@ -422,9 +422,9 @@ export function CollarTagModal({ pet, onClose }) {
           title="Haz clic para voltear la chapa"
           style={{
             position: "relative",
-            width: "min(260px, 68vw)",
-            height: "min(260px, 68vw)",
-            margin: "0 auto 16px",
+            width: "min(220px, 30vh, 65vw)",
+            height: "min(220px, 30vh, 65vw)",
+            margin: "0 auto 12px",
             perspective: "1000px",
             transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transition: "transform 0.1s ease-out",
@@ -578,7 +578,7 @@ export function CollarTagModal({ pet, onClose }) {
         </div>
 
         {/* Secondary Row: Both Sides 3D SVG, Printable Sheet & Direct Print */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.1fr 0.8fr", gap: "8px", marginBottom: "12px" }}>
+        <div className="collar-secondary-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1.1fr 0.8fr", gap: "8px", marginBottom: "12px" }}>
           <button
             type="button"
             className="btn-secondary"
