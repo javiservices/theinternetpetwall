@@ -246,53 +246,24 @@ export function CollarTagModal({ pet, onClose }) {
         </div>
 
         {/* Customization Toolbar: Shape & Finish & Face */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-            background: "var(--bg-warm)",
-            padding: "10px 12px",
-            borderRadius: "14px",
-            marginBottom: "12px",
-            border: "1px solid var(--border-subtle)",
-          }}
-        >
+        <div className="collar-toolbar">
           {/* Row 1: Shape & Face */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <div className="collar-toolbar-row">
             {/* Shape selection */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)" }}>Forma:</span>
-              <div style={{ display: "inline-flex", gap: "4px", background: "var(--bg-surface)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
+            <div className="collar-shape-group">
+              <span className="collar-toolbar-label">Forma:</span>
+              <div className="collar-shape-toggle">
                 <button
                   type="button"
                   onClick={() => setShape("circle")}
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    borderRadius: "8px",
-                    border: "none",
-                    background: shape === "circle" ? "var(--accent-gold)" : "transparent",
-                    color: shape === "circle" ? "#000" : "var(--text-secondary)",
-                    cursor: "pointer",
-                  }}
+                  className={`collar-shape-btn ${shape === "circle" ? "active" : ""}`}
                 >
                   ⭕ Redonda (Ø 30mm)
                 </button>
                 <button
                   type="button"
                   onClick={() => setShape("square")}
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    borderRadius: "8px",
-                    border: "none",
-                    background: shape === "square" ? "var(--accent-gold)" : "transparent",
-                    color: shape === "square" ? "#000" : "var(--text-secondary)",
-                    cursor: "pointer",
-                  }}
+                  className={`collar-shape-btn ${shape === "square" ? "active" : ""}`}
                 >
                   ⬛ Placa (3x3 cm)
                 </button>
@@ -303,19 +274,7 @@ export function CollarTagModal({ pet, onClose }) {
             <button
               type="button"
               onClick={toggleSide}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                borderRadius: "10px",
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-color)",
-                fontSize: "0.76rem",
-                fontWeight: 700,
-                color: "var(--accent-gold-dark)",
-                cursor: "pointer",
-              }}
+              className="collar-face-btn"
             >
               <RotateCw size={13} />
               <span>Ver {viewSide === "front" ? "Reverso (QR)" : "Anverso (Foto)"}</span>
@@ -323,88 +282,40 @@ export function CollarTagModal({ pet, onClose }) {
           </div>
 
           {/* Row 2: Metallic Finishes */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)" }}>Acabado:</span>
-            <div style={{ display: "flex", gap: "8px" }}>
+          <div className="collar-finish-section">
+            <span className="collar-toolbar-label">Acabado:</span>
+            <div className="collar-finish-grid">
               <button
                 type="button"
                 onClick={() => setFinish("gold")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  border: finish === "gold" ? "2px solid #D97706" : "1px solid var(--border-color)",
-                  background: finish === "gold" ? "rgba(245, 158, 11, 0.15)" : "var(--bg-surface)",
-                  color: finish === "gold" ? "#B45309" : "var(--text-secondary)",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className={`collar-finish-btn ${finish === "gold" ? "active-gold" : ""}`}
               >
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "linear-gradient(135deg, #FDE047, #B45309)" }} />
+                <span className="collar-finish-dot finish-dot-gold" />
                 <span>Oro 24K</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFinish("silver")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  border: finish === "silver" ? "2px solid #64748B" : "1px solid var(--border-color)",
-                  background: finish === "silver" ? "rgba(100, 116, 139, 0.15)" : "var(--bg-surface)",
-                  color: finish === "silver" ? "#334155" : "var(--text-secondary)",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className={`collar-finish-btn ${finish === "silver" ? "active-silver" : ""}`}
               >
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "linear-gradient(135deg, #FFFFFF, #64748B)" }} />
+                <span className="collar-finish-dot finish-dot-silver" />
                 <span>Plata Titanio</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFinish("black")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  border: finish === "black" ? "2px solid #D4AF37" : "1px solid var(--border-color)",
-                  background: finish === "black" ? "rgba(17, 24, 39, 0.25)" : "var(--bg-surface)",
-                  color: finish === "black" ? "var(--text-primary)" : "var(--text-secondary)",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className={`collar-finish-btn ${finish === "black" ? "active-black" : ""}`}
               >
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "linear-gradient(135deg, #1E293B, #020617)", border: "1px solid #D4AF37" }} />
+                <span className="collar-finish-dot finish-dot-black" />
                 <span>Ónix & Oro</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFinish("3dprint")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  border: finish === "3dprint" ? "2px solid #3B82F6" : "1px solid var(--border-color)",
-                  background: finish === "3dprint" ? "rgba(59, 130, 246, 0.15)" : "var(--bg-surface)",
-                  color: finish === "3dprint" ? "#2563EB" : "var(--text-secondary)",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className={`collar-finish-btn ${finish === "3dprint" ? "active-3dprint" : ""}`}
                 title="Modo relieve de alto contraste en blanco y negro para importar en laminadores 3D (Bambu Studio, Prusa, Cura)"
               >
                 <span>🖨️ Relieve 3D (B/N)</span>
