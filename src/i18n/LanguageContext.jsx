@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { TRANSLATIONS } from "./translations";
 
 export const AVAILABLE_LANGUAGES = [
-  { code: "es", name: "Español", flag: "🇪🇸" },
   { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "es", name: "Español", flag: "🇪🇸" },
   { code: "fr", name: "Français", flag: "🇫🇷" },
   { code: "de", name: "Deutsch", flag: "🇩🇪" },
 ];
 
 const LanguageContext = createContext({
-  language: "es",
+  language: "en",
   setLanguage: () => {},
   t: (key) => key,
   availableLanguages: AVAILABLE_LANGUAGES,
@@ -26,7 +26,7 @@ export function LanguageProvider({ children }) {
     } catch {
       // fallback
     }
-    return "es";
+    return "en";
   });
 
   const setLanguage = (code) => {
@@ -40,12 +40,21 @@ export function LanguageProvider({ children }) {
     }
   };
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = language;
+    }
+  }, [language]);
+
   const t = (key, fallback = "") => {
-    const dict = TRANSLATIONS[language] || TRANSLATIONS.es;
+    const dict = TRANSLATIONS[language] || TRANSLATIONS.en || TRANSLATIONS.es;
     if (dict && dict[key]) {
       return dict[key];
     }
-    // Fallback to ES then EN then key
+    // Fallback to EN then ES then key
+    if (TRANSLATIONS.en && TRANSLATIONS.en[key]) {
+      return TRANSLATIONS.en[key];
+    }
     if (TRANSLATIONS.es && TRANSLATIONS.es[key]) {
       return TRANSLATIONS.es[key];
     }

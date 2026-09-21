@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+
 /**
  * Generates an ultra-premium Official Pet Passport / Certificate of Immortality
  * rendered onto an HTML5 Canvas and returned as a high-res PNG Data URL.
@@ -224,8 +226,11 @@ export async function generatePetPassportDataUrl(pet) {
   // Golden Stamp Seal (Left)
   drawOfficialStamp(ctx, 220, bottomY + 70, pet.date);
 
-  // Simulated QR Code (Right)
-  drawDecorativeQR(ctx, width - 340, bottomY - 10, 160);
+  // Real Scannable QR Code (Right)
+  const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://theinternetpetwall.com";
+  const petIdentifier = pet.code || pet.id;
+  const qrTargetUrl = petIdentifier ? `${origin}/wall?pet=${encodeURIComponent(petIdentifier)}` : `${origin}/wall`;
+  await drawRealQR(ctx, width - 340, bottomY - 10, 160, qrTargetUrl);
 
   // Bottom Legal & Copyright
   ctx.fillStyle = "#94A3B8";
@@ -339,7 +344,7 @@ function drawOfficialStamp(ctx, cx, cy, dateStr) {
   ctx.restore();
 }
 
-function drawDecorativeQR(ctx, x, y, size) {
+async function drawRealQR(ctx, x, y, size, targetUrl) {
   ctx.save();
   // Frame
   ctx.fillStyle = "#FFFFFF";
@@ -349,48 +354,29 @@ function drawDecorativeQR(ctx, x, y, size) {
   ctx.fill();
   ctx.stroke();
 
-  // Draw simulated QR matrix blocks
-  const innerMargin = 16;
+  // Render authentic scannable QR Code
+  const innerMargin = 12;
   const innerSize = size - innerMargin * 2;
-  const modules = 15;
-  const cellSize = innerSize / modules;
-
-  ctx.fillStyle = "#1E293B";
-
-  // Corner locators
-  const drawLocator = (lx, ly) => {
-    ctx.fillRect(lx, ly, cellSize * 4, cellSize * 4);
-    ctx.clearRect(lx + cellSize, ly + cellSize, cellSize * 2, cellSize * 2);
-    ctx.fillRect(lx + cellSize * 1.3, ly + cellSize * 1.3, cellSize * 1.4, cellSize * 1.4);
-  };
-  drawLocator(x + innerMargin, y + innerMargin);
-  drawLocator(x + innerMargin + (modules - 4) * cellSize, y + innerMargin);
-  drawLocator(x + innerMargin, y + innerMargin + (modules - 4) * cellSize);
-
-  // Pattern dots
-  for (let r = 0; r < modules; r++) {
-    for (let c = 0; c < modules; c++) {
-      if (
-        (r < 5 && c < 5) ||
-        (r < 5 && c >= modules - 5) ||
-        (r >= modules - 5 && c < 5)
-      ) {
-        continue;
-      }
-      if ((r * c + r * 3 + c * 7) % 3 === 0) {
-        ctx.fillRect(
-          x + innerMargin + c * cellSize,
-          y + innerMargin + r * cellSize,
-          cellSize * 0.9,
-          cellSize * 0.9
-        );
-      }
-    }
+  try {
+    const qrCanvas = document.createElement("canvas");
+    await QRCode.toCanvas(qrCanvas, targetUrl, {
+      width: innerSize,
+      margin: 1,
+      color: {
+        dark: "#0F172A",
+        light: "#FFFFFF",
+      },
+      errorCorrectionLevel: "M",
+    });
+    ctx.drawImage(qrCanvas, x + innerMargin, y + innerMargin, innerSize, innerSize);
+  } catch (err) {
+    console.error("Failed to render QR Code on canvas:", err);
   }
 
   // Label under QR
   ctx.fillStyle = "#64748B";
-  ctx.font = "600 11px 'Plus Jakarta Sans', sans-serif";
+  ctx.font = "700 11px 'Plus Jakarta Sans', sans-serif";
+  ctx.textAlign = "center";
   ctx.fillText("ESCANEAR EN EL MURO", x + size / 2, y + size + 20);
 
   ctx.restore();

@@ -151,6 +151,33 @@ function PetWallApp() {
     }
   }, [location.search, pets, navigate]);
 
+  // Dynamic SEO & Title management
+  useEffect(() => {
+    if (selectedPet) {
+      document.title = `${selectedPet.name} (${selectedPet.code || "PET"}) — The Internet Pet Wall`;
+      return;
+    }
+
+    const path = location.pathname;
+    if (path === "/wall") {
+      document.title = "The Great Pet Wall — The Internet Pet Wall";
+    } else if (path === "/discover") {
+      document.title = "Discover Pets & Stories — The Internet Pet Wall";
+    } else if (path === "/privacy") {
+      document.title = "Privacy Policy — The Internet Pet Wall";
+    } else if (path === "/terms") {
+      document.title = "Terms of Service — The Internet Pet Wall";
+    } else if (path === "/cookies") {
+      document.title = "Cookie Policy — The Internet Pet Wall";
+    } else if (path === "/legal") {
+      document.title = "Legal Notice — The Internet Pet Wall";
+    } else if (path === "/admin") {
+      document.title = "Admin Dashboard — The Internet Pet Wall";
+    } else {
+      document.title = "The Internet Pet Wall — The Eternal Digital Pet Mosaic";
+    }
+  }, [location.pathname, selectedPet]);
+
   // Compute live stats
   const totalPets = pets.length;
   const totalTreats = pets.reduce((acc, p) => acc + (p.treats || 0), 0);

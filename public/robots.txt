@@ -1,5 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 
+# Sitemap location
 Sitemap: https://theinternetpetwall.com/sitemap.xml
+Host: https://theinternetpetwall.com
