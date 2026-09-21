@@ -171,10 +171,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
 
     const baseUrl = req.headers.origin || CLIENT_URL;
 
-    // Create session in Stripe: 'card' automatically supports Apple Pay, Google Pay, Link, and Cards
-    // while preventing clutter like Klarna, Bancontact or EPS
+    // Create session in Stripe using Dashboard payment method configuration (Apple Pay, Google Pay, Cards, etc.)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
