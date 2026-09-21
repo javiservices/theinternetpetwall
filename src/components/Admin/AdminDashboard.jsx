@@ -34,6 +34,7 @@ import {
 } from "../../utils/storage";
 import { parsePetLocation } from "../../data/worldLocations";
 import { EditPetModal } from "./EditPetModal";
+import { ModalErrorBoundary } from "./ModalErrorBoundary";
 import { apiService } from "../../services/api";
 
 export function AdminDashboard({ pets, onPetsChange }) {
@@ -966,11 +967,13 @@ export function AdminDashboard({ pets, onPetsChange }) {
 
       {/* Edit Modal */}
       {editingPet && (
-        <EditPetModal
-          pet={editingPet}
-          onClose={() => setEditingPet(null)}
-          onSave={handleSavePet}
-        />
+        <ModalErrorBoundary onClose={() => setEditingPet(null)}>
+          <EditPetModal
+            pet={editingPet}
+            onClose={() => setEditingPet(null)}
+            onSave={handleSavePet}
+          />
+        </ModalErrorBoundary>
       )}
 
       {/* Confirm Delete Modal */}

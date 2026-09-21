@@ -17,6 +17,7 @@ import {
   Minus,
   MessageSquare,
   Heart,
+  Award,
 } from "lucide-react";
 import {
   getAllCountries,
@@ -57,29 +58,34 @@ export function EditPetModal({ pet, onClose, onSave }) {
   // Initialize or re-parse location on mount
   useEffect(() => {
     if (!pet) return;
-    const loc = parsePetLocation(pet.city, pet);
-    const initialCountryCode = pet.countryCode || loc.countryCode || "ES";
-    const initialCountryName = pet.country || loc.countryName || "España";
-    const initialState = pet.state || loc.stateName || "";
-    const initialCity = loc.cityName || pet.city || "";
+    try {
+      const loc = parsePetLocation(pet.city, pet) || {};
+      const initialCountryCode = pet.countryCode || loc.countryCode || "ES";
+      const initialCountryName = pet.country || loc.countryName || "España";
+      const initialState = pet.state || loc.stateName || "";
+      const initialCity = loc.cityName || pet.city || "";
 
-    setFormData((prev) => ({
-      ...prev,
-      countryCode: initialCountryCode,
-      country: initialCountryName,
-      state: initialState,
-      city: initialCity,
-    }));
+      setFormData((prev) => ({
+        ...prev,
+        countryCode: initialCountryCode,
+        country: initialCountryName,
+        state: initialState,
+        city: initialCity,
+      }));
 
-    const statesList = getStatesForCountry(initialCountryCode);
-    setStates(statesList);
+      const statesList = getStatesForCountry(initialCountryCode) || [];
+      setStates(statesList);
 
-    const matchedState = statesList.find(
-      (s) => s.name.toLowerCase() === initialState.toLowerCase() || s.code === initialState
-    );
-    if (matchedState) {
-      const citiesList = getCitiesForState(initialCountryCode, matchedState.code, matchedState.name);
-      setCities(citiesList);
+      const stateStr = String(initialState || "").toLowerCase();
+      const matchedState = statesList.find(
+        (s) => (s?.name && s.name.toLowerCase() === stateStr) || s?.code === initialState
+      );
+      if (matchedState) {
+        const citiesList = getCitiesForState(initialCountryCode, matchedState.code, matchedState.name) || [];
+        setCities(citiesList);
+      }
+    } catch (err) {
+      console.error("Error setting up EditPetModal location:", err);
     }
   }, [pet]);
 
@@ -106,11 +112,11 @@ export function EditPetModal({ pet, onClose, onSave }) {
   // Handle State change
   const handleStateChange = (e) => {
     const stateVal = e.target.value;
-    const matched = states.find((s) => s.code === stateVal || s.name === stateVal);
+    const matched = states.find((s) => s?.code === stateVal || s?.name === stateVal);
     const stateName = matched ? matched.name : stateVal;
     const stateCode = matched ? matched.code : stateVal;
 
-    const citiesList = getCitiesForState(formData.countryCode, stateCode, stateName);
+    const citiesList = getCitiesForState(formData.countryCode, stateCode, stateName) || [];
     setCities(citiesList);
 
     setFormData((prev) => ({
@@ -144,8 +150,8 @@ export function EditPetModal({ pet, onClose, onSave }) {
   };
 
   const handleCopyId = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(pet.id);
+    if (navigator?.clipboard && pet?.id) {
+      navigator.clipboard.writeText(String(pet.id));
       setCopiedId(true);
       setTimeout(() => setCopiedId(false), 2000);
     }
@@ -184,11 +190,11 @@ export function EditPetModal({ pet, onClose, onSave }) {
             </div>
             <div>
               <h2 className="edit-pet-header-title">
-                Editar Ficha: {formData.name || pet.name}
+                Editar Ficha: {formData.name || pet?.name || "Mascota"}
               </h2>
               <div className="edit-pet-header-badges">
                 <span className="edit-pet-badge-code">
-                  🏷️ {pet.code}
+                  🏷️ {pet?.code || "PET"}
                 </span>
 
                 {formData.isVip ? (
@@ -208,7 +214,7 @@ export function EditPetModal({ pet, onClose, onSave }) {
                   title="Copiar ID de base de datos"
                 >
                   {copiedId ? <Check size={12} color="#10B981" /> : <Copy size={12} />}
-                  <span>{copiedId ? "¡Copiado!" : `ID: ${pet.id ? pet.id.slice(0, 8) : ""}...`}</span>
+                  <span>{copiedId ? "¡Copiado!" : `ID: ${String(pet?.id || "").slice(0, 8)}...`}</span>
                 </button>
               </div>
             </div>
@@ -397,7 +403,7 @@ export function EditPetModal({ pet, onClose, onSave }) {
                     <input
                       type="text"
                       className="form-input"
-                      value={formData.instagram ? formData.instagram.replace(/^@/, "") : ""}
+                      value={typeof formData.instagram === "string" ? formData.instagram.replace(/^@/, "") : ""}
                       onChange={(e) => handleChange("instagram", e.target.value ? `@${e.target.value.replace(/^@/, "")}` : "")}
                       placeholder="javilabarum"
                       style={{ paddingLeft: "30px" }}
