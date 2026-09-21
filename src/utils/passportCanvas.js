@@ -144,10 +144,11 @@ export async function generatePetPassportDataUrl(pet) {
       }
       ctx.drawImage(img, sx, sy, sWidth, sHeight, photoX, photoY, photoSize, photoSize);
       ctx.restore();
+    } else {
+      throw new Error("Image could not be loaded");
     }
-    ctx.drawImage(img, sx, sy, sWidth, sHeight, photoX, photoY, photoSize, photoSize);
-    ctx.restore();
-  } catch {
+  } catch (err) {
+    console.warn("Canvas photo fallback triggered:", err);
     // Fallback if image fails to load in canvas
     ctx.save();
     ctx.fillStyle = "#E2E8F0";
@@ -160,7 +161,7 @@ export async function generatePetPassportDataUrl(pet) {
   }
 
   // VIP Badge on photo if VIP
-  if (pet.isVip) {
+  if (isVip) {
     const badgeW = 200;
     const badgeH = 42;
     const badgeX = (width - badgeW) / 2;
@@ -244,12 +245,24 @@ function loadImage(src) {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = () => {
-      // Fallback attempt without crossOrigin or standard fallback
-      const fallback = new Image();
-      fallback.onload = () => resolve(fallback);
-      fallback.onerror = () => resolve(null);
-      fallback.src = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80";
+    img.onerror = async () => {
+      try {
+        const response = await fetch(src, { mode: "cors" });
+        if (response.ok) {
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const blobImg = new Image();
+          blobImg.onload = () => {
+            resolve(blobImg);
+          };
+          blobImg.onerror = () => resolve(null);
+          blobImg.src = objectUrl;
+          return;
+        }
+      } catch (err) {
+        console.warn("Could not fetch image as blob:", err);
+      }
+      resolve(null);
     };
     img.src = src;
   });
