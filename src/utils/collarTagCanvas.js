@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { parsePetLocation } from "../data/worldLocations";
+import { parsePetLocation } from "../data/worldLocations.js";
 
 /**
  * Ultra-realistic Physical Collar Tag Generator (3x3 cm / 30 mm)
@@ -7,29 +7,44 @@ import { parsePetLocation } from "../data/worldLocations";
  * laser engraving, and real-life everyday durability.
  */
 
-function loadSafeImage(src) {
+async function loadSafeImage(src) {
+  if (!src) return null;
+  if (typeof document === "undefined") return null;
+
+  // 1. Data URLs or Blobs are already safe and local
+  if (src.startsWith("data:") || src.startsWith("blob:")) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+
+  // 2. Fetch with CORS and cache-buster to prevent tainted canvas from browser cache
+  try {
+    const fetchUrl = src.includes("?") ? `${src}&_cb=${Date.now()}` : `${src}?_cb=${Date.now()}`;
+    const response = await fetch(fetchUrl, { mode: "cors" });
+    if (response.ok) {
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = blobUrl;
+      });
+    }
+  } catch (err) {
+    console.warn("fetch blob fallback failed, trying direct image:", err);
+  }
+
+  // 3. Direct anonymous image fallback
   return new Promise((resolve) => {
-    if (!src) return resolve(null);
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = async () => {
-      try {
-        const res = await fetch(src, { mode: "cors" });
-        if (res.ok) {
-          const blob = await res.blob();
-          const objUrl = URL.createObjectURL(blob);
-          const bImg = new Image();
-          bImg.onload = () => resolve(bImg);
-          bImg.onerror = () => resolve(null);
-          bImg.src = objUrl;
-          return;
-        }
-      } catch {
-        // Fallback error ignored
-      }
-      resolve(null);
-    };
+    img.onerror = () => resolve(null);
     img.src = src;
   });
 }
@@ -699,19 +714,10 @@ function escapeXml(unsafe) {
   });
 }
 
-/**
- * Generate a ready-to-print vector .SVG for 3D slicers (Bambu Studio, PrusaSlicer, Cura, Orca, Tinkercad).
- * Sized 30mm x 35mm with separated Base Body and Raised Relief layers.
- * Embeds the real pet cameo portrait and provides perfect spacing without text/ear collisions.
- */
-export async function generateCollarTagSvg(pet, { shape = "circle", side = "front" } = {}) {
-  const cx = 150;
-  const cy = 195;
-  const R = 125;
+function getSvgContour(cx, cy, R, shape = "circle") {
   const earR = 28;
   const earCy = 55;
   const holeR = 13.5;
-
   let contourPath = "";
 
   if (shape === "circle") {
@@ -742,48 +748,50 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
       `L ${(cx - connectX).toFixed(2)} ${topY} Z`;
   }
 
-  // Ring hole path (concentric with ear)
   const holePath = `M ${cx - holeR} ${earCy} A ${holeR} ${holeR} 0 1 0 ${cx + holeR} ${earCy} A ${holeR} ${holeR} 0 1 0 ${cx - holeR} ${earCy} Z`;
 
-  // QR Code generation if side === "back"
-  let qrSvgContent = "";
-  if (side === "back") {
-    const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://theinternetpetwall.com";
-    const targetUrl = `${origin}/wall?pet=${encodeURIComponent(pet.code || pet.id)}`;
-    try {
-      const qrRaw = await new Promise((res, rej) => {
-        QRCode.toString(targetUrl, { type: "svg", margin: 0, errorCorrectionLevel: "M" }, (err, svg) => {
-          if (err) rej(err); else res(svg);
-        });
-      });
-      const pathMatch = qrRaw.match(/<path[^>]*stroke=\"#000000\"[^>]*d=\"([^\"]+)\"/);
-      if (pathMatch) {
-        qrSvgContent = `
-        <rect x="96" y="126" width="108" height="108" rx="10" fill="#FFFFFF"/>
-        <g transform="translate(100, 130) scale(3.35)">
-          <path d="${pathMatch[1]}" stroke="#000000" stroke-width="1"/>
-        </g>`;
-      }
-    } catch (e) {
-      console.warn("Could not generate vector QR for SVG:", e);
-    }
-  }
+  return { contourPath, holePath, earCy, earR, holeR };
+}
 
-  // Real pet photo cameo generation for Front
-  let cameoImageSvg = "";
-  if (side === "front") {
-    const photoUrl = pet.photoUrl || pet.photo_url;
-    let petPhoto = null;
-    if (photoUrl && typeof document !== "undefined") {
-      petPhoto = await loadSafeImage(photoUrl);
+async function getSvgQr(pet, cx) {
+  const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://theinternetpetwall.com";
+  const targetUrl = `${origin}/wall?pet=${encodeURIComponent(pet.code || pet.id)}`;
+  try {
+    const qrRaw = await new Promise((res, rej) => {
+      QRCode.toString(targetUrl, { type: "svg", margin: 0, errorCorrectionLevel: "M" }, (err, svg) => {
+        if (err) rej(err); else res(svg);
+      });
+    });
+    const pathMatch = qrRaw.match(/<path[^>]*stroke=\"#000000\"[^>]*d=\"([^\"]+)\"/);
+    if (pathMatch) {
+      const qrW = 108;
+      const qrY = 128;
+      return `
+      <rect x="${cx - qrW / 2}" y="${qrY}" width="${qrW}" height="${qrW}" rx="10" fill="#FFFFFF"/>
+      <g transform="translate(${cx - 50}, ${qrY + 4}) scale(3.35)">
+        <path d="${pathMatch[1]}" stroke="#000000" stroke-width="1"/>
+      </g>`;
     }
-    if (petPhoto && typeof document !== "undefined") {
-      try {
+  } catch (e) {
+    console.warn("Could not generate vector QR for SVG:", e);
+  }
+  return "";
+}
+
+async function getSvgCameo(pet, cx) {
+  const photoUrl = pet.photoUrl || pet.photo_url;
+  const cameoCy = 138;
+  const cameoR = 40;
+
+  if (photoUrl && typeof document !== "undefined") {
+    try {
+      const petPhoto = await loadSafeImage(photoUrl);
+      if (petPhoto) {
         const offCanvas = document.createElement("canvas");
-        const cSize = 250;
-        offCanvas.width = cSize;
-        offCanvas.height = cSize;
-        const offCtx = offCanvas.getContext("2d");
+        const grid = 76;
+        offCanvas.width = grid;
+        offCanvas.height = grid;
+        const offCtx = offCanvas.getContext("2d", { willReadFrequently: true });
 
         const aspect = petPhoto.width / petPhoto.height;
         let sw = petPhoto.width;
@@ -797,17 +805,17 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
           sh = petPhoto.width;
           sy = (petPhoto.height - petPhoto.width) / 2;
         }
-        offCtx.drawImage(petPhoto, sx, sy, sw, sh, 0, 0, cSize, cSize);
+        offCtx.drawImage(petPhoto, sx, sy, sw, sh, 0, 0, grid, grid);
 
-        const imgData = offCtx.getImageData(0, 0, cSize, cSize);
+        const imgData = offCtx.getImageData(0, 0, grid, grid);
         const data = imgData.data;
-        const centerOffset = cSize / 2;
+        const centerOffset = grid / 2;
 
         let centerLumTotal = 0;
         let centerCount = 0;
-        for (let y = 0; y < cSize; y++) {
-          for (let x = 0; x < cSize; x++) {
-            const idx = (y * cSize + x) * 4;
+        for (let y = 0; y < grid; y++) {
+          for (let x = 0; x < grid; x++) {
+            const idx = (y * grid + x) * 4;
             const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
             if (d <= 0.65) {
               centerLumTotal += 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
@@ -818,104 +826,185 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
         const avgLum = centerCount > 0 ? centerLumTotal / centerCount : 120;
         const threshold = Math.min(Math.max(avgLum * 0.90, 70), 155);
 
-        for (let y = 0; y < cSize; y++) {
-          for (let x = 0; x < cSize; x++) {
-            const idx = (y * cSize + x) * 4;
-            const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
-            if (d >= 0.98) {
-              data[idx] = 10;
-              data[idx + 1] = 15;
-              data[idx + 2] = 29;
-              data[idx + 3] = 255;
-              continue;
+        const pixelW = (cameoR * 2) / grid;
+        const pixelH = (cameoR * 2) / grid;
+        let pathD = "";
+
+        for (let y = 0; y < grid; y++) {
+          let inSpan = false;
+          let startX = 0;
+
+          for (let x = 0; x <= grid; x++) {
+            let isRelief = false;
+            if (x < grid) {
+              const idx = (y * grid + x) * 4;
+              const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
+              if (d < 0.96) {
+                const vignette = d < 0.60 ? 1.0 : Math.cos(((d - 0.60) / 0.38) * Math.PI * 0.5);
+                const rawLum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const effectiveLum = rawLum * vignette;
+                isRelief = effectiveLum >= threshold;
+              }
             }
-            const vignette = d < 0.60 ? 1.0 : Math.cos(((d - 0.60) / 0.38) * Math.PI * 0.5);
-            const rawLum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-            const effectiveLum = rawLum * vignette;
-            const isRelief = effectiveLum >= threshold;
-            data[idx] = isRelief ? 255 : 10;
-            data[idx + 1] = isRelief ? 255 : 15;
-            data[idx + 2] = isRelief ? 255 : 29;
-            data[idx + 3] = 255;
+
+            if (isRelief && !inSpan) {
+              inSpan = true;
+              startX = x;
+            } else if (!isRelief && inSpan) {
+              inSpan = false;
+              const spanX = (cx - cameoR + startX * pixelW).toFixed(2);
+              const spanY = (cameoCy - cameoR + y * pixelH).toFixed(2);
+              const spanW = ((x - startX) * pixelW).toFixed(2);
+              const spanH = pixelH.toFixed(2);
+              pathD += `M ${spanX} ${spanY} h ${spanW} v ${spanH} h -${spanW} Z `;
+            }
           }
         }
-        offCtx.putImageData(imgData, 0, 0);
-        const cameoDataUrl = offCanvas.toDataURL("image/png");
 
-        cameoImageSvg = `
-        <defs>
-          <clipPath id="cameo-photo-clip">
-            <circle cx="${cx}" cy="142" r="42"/>
-          </clipPath>
-        </defs>
-        <image href="${cameoDataUrl}" x="${cx - 42}" y="${142 - 42}" width="84" height="84" clip-path="url(#cameo-photo-clip)" preserveAspectRatio="xMidYMid slice"/>
-        <circle cx="${cx}" cy="142" r="42" fill="none" stroke="#FFFFFF" stroke-width="3"/>
-        `;
-      } catch (err) {
-        console.warn("Could not process cameo for SVG:", err);
+        if (pathD) {
+          return `
+          <!-- Real Pet Photo 3D Relief Vector Cameo -->
+          <circle cx="${cx}" cy="${cameoCy}" r="${cameoR + 2.5}" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+          <path d="${pathD}" fill="#FFFFFF" stroke="none"/>
+          `;
+        }
       }
-    }
-
-    if (!cameoImageSvg) {
-      cameoImageSvg = `
-      <circle cx="${cx}" cy="142" r="42" fill="none" stroke="#FFFFFF" stroke-width="3"/>
-      <circle cx="${cx}" cy="152" r="16" fill="#FFFFFF" stroke="none"/>
-      <circle cx="${cx - 16}" cy="134" r="6" fill="#FFFFFF" stroke="none"/>
-      <circle cx="${cx - 6}" cy="126" r="6.5" fill="#FFFFFF" stroke="none"/>
-      <circle cx="${cx + 6}" cy="126" r="6.5" fill="#FFFFFF" stroke="none"/>
-      <circle cx="${cx + 16}" cy="134" r="6" fill="#FFFFFF" stroke="none"/>
-      `;
+    } catch (err) {
+      console.warn("Could not process vector cameo for SVG:", err);
     }
   }
 
+  // Regal emblem fallback when photo is absent
+  return `
+  <!-- Royal Pet Cameo Silhouette Fallback -->
+  <circle cx="${cx}" cy="${cameoCy}" r="${cameoR + 2.5}" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <ellipse cx="${cx}" cy="${cameoCy + 14}" rx="15" ry="11" fill="#FFFFFF"/>
+  <circle cx="${cx - 15}" cy="${cameoCy - 3}" r="5.5" fill="#FFFFFF"/>
+  <circle cx="${cx - 6}" cy="${cameoCy - 11}" r="6" fill="#FFFFFF"/>
+  <circle cx="${cx + 6}" cy="${cameoCy - 11}" r="6" fill="#FFFFFF"/>
+  <circle cx="${cx + 15}" cy="${cameoCy - 3}" r="5.5" fill="#FFFFFF"/>
+  <polygon points="${cx},${cameoCy - 18} ${cx + 3},${cameoCy - 11} ${cx + 10},${cameoCy - 11} ${cx + 4.5},${cameoCy - 7} ${cx + 7},${cameoCy} ${cx},${cameoCy - 4} ${cx - 7},${cameoCy} ${cx - 4.5},${cameoCy - 7} ${cx - 10},${cameoCy - 11} ${cx - 3},${cameoCy - 11}" fill="#FFFFFF"/>
+  `;
+}
+
+function getFrontReliefSvg(pet, cx, cameoSvg) {
   const petName = escapeXml((pet.name || "PET").toUpperCase().slice(0, 10));
   const petCode = escapeXml(pet.code || "PET-0000-ES");
   const petCity = escapeXml((pet.city || "ESPAÑA").toUpperCase());
+  const pillW = 150;
+
+  return `
+    <!-- Photo Medallion Real Cameo -->
+    ${cameoSvg}
+
+    <!-- Hero Pet Name (Thick, printable stroke) -->
+    <text x="${cx}" y="206" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', 'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="22" letter-spacing="1.5">${petName}</text>
+
+    <!-- Code Capsule -->
+    <rect x="${cx - pillW / 2}" y="218" width="${pillW}" height="22" rx="11" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
+    <text x="${cx}" y="233.5" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Courier New', Courier, monospace" font-weight="900" font-size="11" letter-spacing="1.5">${petCode}</text>
+
+    <!-- City / Country -->
+    <text x="${cx}" y="258" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9.5" letter-spacing="2.5">${petCity}</text>
+  `;
+}
+
+function getBackReliefSvg(pet, cx, qrSvg) {
   const contactText = escapeXml(pet.instagram ? `@${pet.instagram.replace(/^@/, "")}` : "theinternetpetwall.com");
 
+  return `
+    <!-- Back Header (Safely centered in open zone: 36px below top edge, 22px above QR) -->
+    <text x="${cx}" y="106" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="10" letter-spacing="1.2">SOS · ESCÁNAME</text>
+
+    <!-- QR Code Card -->
+    ${qrSvg}
+
+    <!-- Call to action -->
+    <text x="${cx}" y="256" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="0.8">ESCÁNAME CON EL MÓVIL</text>
+    <text x="${cx}" y="272" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', monospace" font-weight="800" font-size="8" letter-spacing="1">${contactText}</text>
+  `;
+}
+
+/**
+ * Generate a ready-to-print vector .SVG for 3D slicers (Bambu Studio, PrusaSlicer, Cura, Orca, Tinkercad).
+ * 100% Pure Vector Paths without raster blobs: Extrudes seamlessly as 3D layers.
+ * Supports: side="front" (30x35mm), side="back" (30x35mm), or side="both" (62x35mm build plate).
+ */
+export async function generateCollarTagSvg(pet, { shape = "circle", side = "front" } = {}) {
+  const cy = 195;
+  const R = 125;
+  const petName = escapeXml((pet.name || "PET").toUpperCase().slice(0, 10));
+  const petCode = escapeXml(pet.code || "PET-0000-ES");
+
+  if (side === "both") {
+    const cx1 = 150;
+    const cx2 = 470;
+    const geom1 = getSvgContour(cx1, cy, R, shape);
+    const geom2 = getSvgContour(cx2, cy, R, shape);
+
+    const cameoSvg = await getSvgCameo(pet, cx1);
+    const qrSvg = await getSvgQr(pet, cx2);
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="62mm" height="35mm" viewBox="0 0 620 350" version="1.1">
+  <title>Chapa Oficial ${petName} (${petCode}) - Ambas Caras 30mm</title>
+  <desc>Optimizado para boquilla 0.4mm FDM. Base: 2.2mm, Relieve: 1.0mm. Anverso (Izq) + Reverso (Der).</desc>
+
+  <!-- LAYER 1: BASE BODY (2.2 mm height) with Ring Eyelet Cutouts -->
+  <g id="base-body" fill="#0A0F1D">
+    <path fill-rule="evenodd" d="${geom1.contourPath} ${geom1.holePath}" />
+    <path fill-rule="evenodd" d="${geom2.contourPath} ${geom2.holePath}" />
+  </g>
+
+  <!-- LAYER 2: RAISED RELIEFS (1.0 mm height for dual-color extrusion) -->
+  <g id="raised-reliefs" fill="#FFFFFF" stroke="#FFFFFF">
+    <!-- Outer Rim Bevels -->
+    <path d="${geom1.contourPath}" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="${cx1}" cy="${geom1.earCy}" r="${geom1.holeR + 2.5}" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+
+    <path d="${geom2.contourPath}" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="${cx2}" cy="${geom2.earCy}" r="${geom2.holeR + 2.5}" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+
+    <!-- ANVERSO (CARA A) -->
+    ${getFrontReliefSvg(pet, cx1, cameoSvg)}
+
+    <!-- REVERSO (CARA B) -->
+    ${getBackReliefSvg(pet, cx2, qrSvg)}
+  </g>
+</svg>`;
+  }
+
+  // Single Face (Front or Back)
+  const cx = 150;
+  const geom = getSvgContour(cx, cy, R, shape);
+
+  let reliefContent = "";
+  if (side === "front") {
+    const cameoSvg = await getSvgCameo(pet, cx);
+    reliefContent = getFrontReliefSvg(pet, cx, cameoSvg);
+  } else {
+    const qrSvg = await getSvgQr(pet, cx);
+    reliefContent = getBackReliefSvg(pet, cx, qrSvg);
+  }
+
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30mm" height="35mm" viewBox="0 0 300 350" version="1.1">
-  <title>Chapa Oficial ${petName} (${petCode}) - 30x35mm</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="35mm" viewBox="0 0 300 350" version="1.1">
+  <title>Chapa Oficial ${petName} (${petCode}) - ${side === "front" ? "Anverso" : "Reverso"} 30x35mm</title>
   <desc>Optimizado para boquilla 0.4mm FDM. Base: 2.2mm, Relieve: 1.0mm.</desc>
 
   <!-- LAYER 1: BASE BODY (2.2 mm height) with Ring Eyelet Cutout -->
   <g id="base-body" fill="#0A0F1D">
-    <path fill-rule="evenodd" d="${contourPath} ${holePath}" />
+    <path fill-rule="evenodd" d="${geom.contourPath} ${geom.holePath}" />
   </g>
 
   <!-- LAYER 2: RAISED RELIEFS (1.0 mm height for dual-color extrusion) -->
   <g id="raised-reliefs" fill="#FFFFFF" stroke="#FFFFFF">
     <!-- Outer Rim Bevel -->
-    <path d="${contourPath}" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="${geom.contourPath}" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round"/>
+    <!-- Suspension Hole Bevel -->
+    <circle cx="${cx}" cy="${geom.earCy}" r="${geom.holeR + 2.5}" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
 
-    ${
-      side === "front"
-        ? `
-    <!-- Photo Medallion Real Cameo -->
-    ${cameoImageSvg}
-
-    <!-- Hero Pet Name (Thick, printable stroke) -->
-    <text x="${cx}" y="206" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif" font-weight="900" font-size="22" letter-spacing="1.5">${petName}</text>
-
-    <!-- Code Capsule -->
-    <rect x="75" y="218" width="150" height="20" rx="10" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
-    <text x="${cx}" y="232.5" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Courier New', Courier, monospace" font-weight="900" font-size="11" letter-spacing="1.5">${petCode}</text>
-
-    <!-- City / Country -->
-    <text x="${cx}" y="254" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2.5">${petCity}</text>
-    `
-        : `
-    <!-- Back Header (Safely inside body, well below ear) -->
-    <text x="${cx}" y="112" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="10.5" letter-spacing="1.5">SOS · ESCÁNAME</text>
-
-    <!-- QR Code Card -->
-    ${qrSvgContent}
-
-    <!-- Call to action -->
-    <text x="${cx}" y="254" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="0.8">ESCÁNAME CON EL MÓVIL</text>
-    <text x="${cx}" y="268" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', monospace" font-weight="800" font-size="7.5" letter-spacing="1">${contactText}</text>
-    `
-    }
+    ${reliefContent}
   </g>
 </svg>`;
 }

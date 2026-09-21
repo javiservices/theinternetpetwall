@@ -127,11 +127,12 @@ export function CollarTagModal({ pet, onClose }) {
   };
 
   // 3. Download Vector SVG for 3D Printing (Bambu / Prusa / Orca / Tinkercad)
-  const handleDownloadSvg = async () => {
+  const handleDownloadSvg = async (targetSide = viewSide) => {
     setIsDownloading(true);
     try {
-      const svgString = await generateCollarTagSvg(pet, { shape, side: viewSide });
-      const filename = `Chapa_${pet.name}_${pet.code}_3x3cm_${viewSide}.svg`;
+      const svgString = await generateCollarTagSvg(pet, { shape, side: targetSide });
+      const sideLabel = targetSide === "both" ? "Completa_AmbasCaras" : targetSide === "front" ? "Anverso" : "Reverso";
+      const filename = `Chapa_${pet.name}_${pet.code}_3x3cm_${sideLabel}.svg`;
       const ok = await downloadSvgString(svgString, filename);
       if (ok) {
         setDownloadSuccess(true);
@@ -528,11 +529,11 @@ export function CollarTagModal({ pet, onClose }) {
             <span>Descargar Chapa HD</span>
           </button>
 
-          {/* Button 2: Download Vector SVG for 3D Printing */}
+          {/* Button 2: Download Vector SVG for 3D Printing (Active Face) */}
           <button
             type="button"
             className="btn-secondary"
-            onClick={handleDownloadSvg}
+            onClick={() => handleDownloadSvg(viewSide)}
             disabled={isGenerating || isDownloading}
             style={{
               justifyContent: "center",
@@ -543,15 +544,35 @@ export function CollarTagModal({ pet, onClose }) {
               color: finish === "3dprint" ? "#2563EB" : "var(--text-primary)",
               fontWeight: 800,
             }}
-            title="Descarga el modelo vectorial .SVG listo para laminar y extruir en Bambu Studio, PrusaSlicer, Orca o Tinkercad"
+            title={`Descarga el modelo vectorial .SVG del ${viewSide === "front" ? "Anverso (Foto y nombre)" : "Reverso (QR de rescate)"} listo para laminar en 3D`}
           >
             <Box size={16} color={finish === "3dprint" ? "#2563EB" : "currentColor"} />
-            <span>Modelo SVG 3D (.svg)</span>
+            <span>SVG 3D ({viewSide === "front" ? "Anverso" : "Reverso"})</span>
           </button>
         </div>
 
-        {/* Secondary Row: Printable Sheet & Direct Print */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "10px", marginBottom: "12px" }}>
+        {/* Secondary Row: Both Sides 3D SVG, Printable Sheet & Direct Print */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.1fr 0.8fr", gap: "8px", marginBottom: "12px" }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => handleDownloadSvg("both")}
+            disabled={isGenerating || isDownloading}
+            style={{
+              justifyContent: "center",
+              padding: "9px 8px",
+              fontSize: "0.76rem",
+              borderColor: "#3B82F6",
+              color: "#2563EB",
+              background: "rgba(59, 130, 246, 0.06)",
+              fontWeight: 700,
+            }}
+            title="Descarga un único archivo .SVG con ambas caras (Anverso + Reverso) colocadas lado a lado en la cama de impresión 3D"
+          >
+            <Box size={14} color="#2563EB" />
+            <span>Ambas Caras (.svg)</span>
+          </button>
+
           <button
             type="button"
             className="btn-secondary"
@@ -559,25 +580,25 @@ export function CollarTagModal({ pet, onClose }) {
             disabled={isGenerating || isDownloading}
             style={{
               justifyContent: "center",
-              padding: "9px 12px",
-              fontSize: "0.80rem",
+              padding: "9px 8px",
+              fontSize: "0.76rem",
               borderColor: "var(--accent-gold)",
               color: "var(--accent-gold-dark)",
             }}
             title="Descarga la plantilla con anverso y reverso para recortar y plastificar a tamaño real (3x3 cm)"
           >
-            <Layers size={15} />
-            <span>Plantilla Imprimible (3x3)</span>
+            <Layers size={14} />
+            <span>Plantilla Papel (3x3)</span>
           </button>
 
           <button
             type="button"
             className="btn-secondary"
             onClick={handlePrint}
-            style={{ justifyContent: "center", fontSize: "0.80rem", padding: "9px 12px" }}
+            style={{ justifyContent: "center", fontSize: "0.76rem", padding: "9px 8px" }}
           >
-            <Printer size={15} />
-            <span>Imprimir Directo</span>
+            <Printer size={14} />
+            <span>Imprimir</span>
           </button>
         </div>
 
