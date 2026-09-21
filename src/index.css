@@ -3260,7 +3260,7 @@ img {
     padding: 0;
     align-items: flex-end; /* Slide-up from bottom on phone */
     justify-content: center;
-    overflow-y: auto;
+    overflow: hidden; /* Avoid double nested scrollbar conflict on touch */
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
@@ -3268,12 +3268,12 @@ img {
   .modal-content {
     border-radius: 24px 24px 0 0;
     max-height: 85vh; /* Fallback for browsers without dvh */
-    max-height: min(88dvh, calc(100dvh - 44px));
-    padding: 24px 16px 28px;
+    max-height: min(90dvh, calc(100dvh - 24px));
+    padding: 24px 16px 36px;
     width: 100%;
     margin-bottom: 0;
     position: relative;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -5836,7 +5836,8 @@ img {
    ============================================================================== */
 .collar-modal {
   position: relative;
-  overflow: hidden;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 @media print {

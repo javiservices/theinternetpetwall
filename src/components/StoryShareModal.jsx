@@ -327,7 +327,11 @@ export function StoryShareModal({ pet, onClose }) {
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 2300 }}>
       <div
         className="modal-content"
-        style={{ maxWidth: "480px", textAlign: "center", padding: "28px 24px" }}
+        style={{
+          maxWidth: "480px",
+          textAlign: "center",
+          paddingBottom: "max(32px, env(safe-area-inset-bottom, 24px))",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile drag handle */}
@@ -355,9 +359,9 @@ export function StoryShareModal({ pet, onClose }) {
         <div
           style={{
             position: "relative",
-            width: "240px",
-            height: "426px",
-            margin: "0 auto 20px",
+            width: "min(225px, calc(45vh * 9 / 16))",
+            height: "min(400px, 45vh)",
+            margin: "0 auto 16px",
             borderRadius: "16px",
             overflow: "hidden",
             boxShadow: "0 10px 25px rgba(0,0,0,0.3)",

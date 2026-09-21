@@ -48,6 +48,7 @@ function PetWallApp() {
   const [passportPet, setPassportPet] = useState(null);
   const [storyPet, setStoryPet] = useState(null);
   const [collarTagPet, setCollarTagPet] = useState(null);
+  const [returnToPetModal, setReturnToPetModal] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState(null);
 
@@ -375,13 +376,18 @@ function PetWallApp() {
           onClose={handleCloseSelectedPet}
           onGiveTreat={handleGiveTreat}
           onViewPassport={(pet) => {
+            setReturnToPetModal(selectedPet);
             handleCloseSelectedPet();
             setPassportPet(pet);
           }}
           onOpenStory={(pet) => {
+            setReturnToPetModal(selectedPet);
+            setSelectedPet(null);
             setStoryPet(pet);
           }}
           onOpenCollarTag={(pet) => {
+            setReturnToPetModal(selectedPet);
+            setSelectedPet(null);
             setCollarTagPet(pet);
           }}
         />
@@ -390,11 +396,21 @@ function PetWallApp() {
       {passportPet && (
         <PassportModal
           pet={passportPet}
-          onClose={handleClosePassport}
+          onClose={() => {
+            handleClosePassport();
+            if (returnToPetModal) {
+              setSelectedPet(returnToPetModal);
+              setReturnToPetModal(null);
+            }
+          }}
           onOpenStory={(pet) => {
+            setReturnToPetModal(returnToPetModal || passportPet);
+            setPassportPet(null);
             setStoryPet(pet);
           }}
           onOpenCollarTag={(pet) => {
+            setReturnToPetModal(returnToPetModal || passportPet);
+            setPassportPet(null);
             setCollarTagPet(pet);
           }}
         />
@@ -403,14 +419,26 @@ function PetWallApp() {
       {storyPet && (
         <StoryShareModal
           pet={storyPet}
-          onClose={() => setStoryPet(null)}
+          onClose={() => {
+            setStoryPet(null);
+            if (returnToPetModal) {
+              setSelectedPet(returnToPetModal);
+              setReturnToPetModal(null);
+            }
+          }}
         />
       )}
 
       {collarTagPet && (
         <CollarTagModal
           pet={collarTagPet}
-          onClose={() => setCollarTagPet(null)}
+          onClose={() => {
+            setCollarTagPet(null);
+            if (returnToPetModal) {
+              setSelectedPet(returnToPetModal);
+              setReturnToPetModal(null);
+            }
+          }}
         />
       )}
 
