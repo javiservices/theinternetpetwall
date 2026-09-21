@@ -87,14 +87,49 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
     }
   };
 
+  const touchStartY = React.useRef(0);
+  const containerRef = React.useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffY = touchEndY - touchStartY.current;
+    // Dismiss bottom sheet on swipe down if at top of scroll
+    if (diffY > 75 && containerRef.current && containerRef.current.scrollTop <= 5) {
+      onClose();
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
+        ref={containerRef}
         className={`modal-content detail-modal-container ${pet.isMemorial ? "modal-memorial-theme" : ""}`}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         role="dialog"
         aria-modal="true"
       >
+        {/* Mobile drag handle */}
+        <div className="modal-drag-indicator mobile-only" aria-hidden="true">
+          <div className="modal-drag-bar" />
+        </div>
+
+        {/* Mobile floating close button: pinned at top-right of sheet, always visible & accessible */}
+        <button
+          type="button"
+          className="detail-floating-close-btn mobile-only"
+          onClick={onClose}
+          aria-label={t("close_modal")}
+          title={t("close_modal")}
+        >
+          <X size={20} />
+        </button>
+
         <div className="detail-modal-grid">
           {/* Pet Photo Column: uncropped presentation with ambient blur backdrop */}
           <div
@@ -110,24 +145,6 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
               }
             }}
           >
-            {/* Mobile close button on photo corner */}
-            <button
-              type="button"
-              className="detail-photo-close-btn mobile-only"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              aria-label={t("close_modal")}
-            >
-              <X size={20} />
-            </button>
 
             {/* Ambient blurred backdrop fills container with subtle matching mood */}
             <img
@@ -193,16 +210,7 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
 
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClose();
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClose();
-                  }}
+                  onClick={onClose}
                   className="detail-icon-btn detail-close-action-btn"
                   title={t("close_modal")}
                   aria-label={t("close_modal")}
@@ -411,6 +419,19 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
                   <span>{t("report_success_msg")}</span>
                 </p>
               )}
+            </div>
+
+            {/* Bottom close button */}
+            <div className="detail-bottom-close-wrap">
+              <button
+                type="button"
+                className="btn-secondary detail-bottom-close-btn"
+                onClick={onClose}
+                id="modal-bottom-close-btn"
+              >
+                <X size={16} />
+                <span>{t("close_modal") || "Cerrar ficha"}</span>
+              </button>
             </div>
           </div>
         </div>

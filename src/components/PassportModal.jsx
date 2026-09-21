@@ -97,29 +97,44 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
     }
   };
 
+  const touchStartY = React.useRef(0);
+  const containerRef = React.useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffY = touchEndY - touchStartY.current;
+    if (diffY > 75 && containerRef.current && containerRef.current.scrollTop <= 5) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1200 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 2200 }}>
       <div
+        ref={containerRef}
         className="modal-content passport-modal"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         role="dialog"
         aria-modal="true"
         style={{ maxWidth: "680px" }}
       >
+        {/* Mobile drag handle */}
+        <div className="modal-drag-indicator mobile-only" aria-hidden="true">
+          <div className="modal-drag-bar" />
+        </div>
+
         <button
           type="button"
           className="modal-close-btn"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
-          onTouchEnd={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
+          onClick={onClose}
           aria-label={t("close_modal")}
+          title={t("close_modal")}
         >
           <X size={20} />
         </button>
@@ -226,6 +241,16 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
               <span>🏷️ Chapa Collar QR</span>
             </button>
           )}
+
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onClose}
+            style={{ width: "100%", justifyContent: "center", height: "44px", marginTop: "10px", fontWeight: 600 }}
+          >
+            <X size={16} />
+            <span>{t("close_modal") || "Cerrar pasaporte"}</span>
+          </button>
         </div>
       </div>
     </div>

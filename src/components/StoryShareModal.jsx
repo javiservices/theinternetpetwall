@@ -297,12 +297,17 @@ export function StoryShareModal({ pet, onClose }) {
   if (!pet) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1250 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 2300 }}>
       <div
         className="modal-content"
         style={{ maxWidth: "480px", textAlign: "center", padding: "28px 24px" }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile drag handle */}
+        <div className="modal-drag-indicator mobile-only" aria-hidden="true">
+          <div className="modal-drag-bar" />
+        </div>
+
         <button className="modal-close-btn" onClick={onClose} aria-label={t("close_modal")}>
           <X size={18} />
         </button>
@@ -350,12 +355,12 @@ export function StoryShareModal({ pet, onClose }) {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
           <button
             className="btn-primary"
             onClick={handleDownload}
             disabled={!isReady}
-            style={{ flex: 1, justifyContent: "center" }}
+            style={{ flex: 1, minWidth: "140px", justifyContent: "center" }}
           >
             <Download size={16} />
             <span>{t("story_download_btn")}</span>
@@ -365,10 +370,20 @@ export function StoryShareModal({ pet, onClose }) {
             className="btn-secondary"
             onClick={handleShare}
             disabled={!isReady}
-            style={{ flex: 1, justifyContent: "center" }}
+            style={{ flex: 1, minWidth: "140px", justifyContent: "center" }}
           >
             {isCopied ? <Check size={16} color="#10B981" /> : <Share2 size={16} />}
             <span>{isCopied ? t("share_copied") : t("share_btn_text")}</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onClose}
+            style={{ width: "100%", justifyContent: "center", height: "42px", marginTop: "4px", fontWeight: 600 }}
+          >
+            <X size={16} />
+            <span>{t("close_modal") || "Cerrar"}</span>
           </button>
         </div>
       </div>
