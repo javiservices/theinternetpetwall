@@ -221,4 +221,57 @@ export const apiService = {
       supabase.removeChannel(channel);
     };
   },
+
+  // 7. Update Pet in Supabase & LocalStorage
+  async updatePet(petData) {
+    if (this.isCloudEnabled() && supabase) {
+      try {
+        const { error } = await supabase
+          .from("pets")
+          .update({
+            name: petData.name,
+            type: petData.type,
+            breed: petData.breed,
+            photo_url: petData.photoUrl,
+            city: petData.city,
+            state: petData.state,
+            country: petData.country,
+            country_code: petData.countryCode,
+            quote: petData.quote,
+            owner: petData.owner,
+            instagram: petData.instagram,
+            is_vip: Boolean(petData.isVip),
+            is_memorial: Boolean(petData.isMemorial),
+            treats: Number(petData.treats || 0),
+          })
+          .eq("id", petData.id);
+
+        if (error) {
+          console.warn("Supabase pet update failed:", error.message);
+        }
+      } catch (err) {
+        console.warn("Error updating pet in Supabase:", err);
+      }
+    }
+    return localAdapter.updatePetInStorage(petData);
+  },
+
+  // 8. Delete Pet in Supabase & LocalStorage
+  async deletePet(petId) {
+    if (this.isCloudEnabled() && supabase) {
+      try {
+        const { error } = await supabase
+          .from("pets")
+          .update({ status: "deleted" })
+          .eq("id", petId);
+
+        if (error) {
+          console.warn("Supabase pet soft delete failed:", error.message);
+        }
+      } catch (err) {
+        console.warn("Error deleting pet in Supabase:", err);
+      }
+    }
+    return localAdapter.deletePetFromStorage(petId);
+  },
 };

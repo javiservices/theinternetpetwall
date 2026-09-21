@@ -5441,6 +5441,392 @@ img {
   }
 }
 
+/* ==========================================================================
+   Admin Edit Pet Modal Redesign (2026 Modern Aesthetic)
+   ========================================================================== */
 
+.edit-pet-modal-content {
+  max-width: 760px;
+  width: 96%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
 
+.edit-pet-modal-header {
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-subtle);
+}
 
+.edit-pet-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.edit-pet-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  flex-shrink: 0;
+}
+
+.edit-pet-header-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 5px 0;
+  line-height: 1.15;
+}
+
+.edit-pet-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.edit-pet-badge-code {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  background: rgba(245, 158, 11, 0.12);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.edit-pet-badge-vip {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #B45309;
+  background: #FEF3C7;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.edit-pet-badge-memorial {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #1E40AF;
+  background: #DBEAFE;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.edit-pet-badge-id {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edit-pet-badge-id:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.edit-pet-modal-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  max-height: calc(86vh - 140px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Photo Hero Card */
+.edit-pet-photo-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 18px 22px;
+}
+
+.edit-pet-photo-preview-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--border-subtle);
+  flex-shrink: 0;
+  cursor: pointer;
+  background: #0F172A;
+}
+
+.edit-pet-photo-preview-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.edit-pet-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 600;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.edit-pet-photo-preview-wrap:hover .edit-pet-photo-overlay {
+  opacity: 1;
+}
+
+.edit-pet-photo-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-pet-photo-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.edit-pet-photo-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.edit-pet-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Sections */
+.edit-pet-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+
+.edit-pet-section-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.edit-pet-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.edit-pet-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+/* Dedication Quote Card */
+.edit-pet-quote-card {
+  position: relative;
+}
+
+.edit-pet-quote-textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: vertical;
+  transition: all var(--transition-fast);
+}
+
+.edit-pet-quote-textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.edit-pet-char-meter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Status switches cards */
+.edit-pet-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.edit-pet-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-subtle);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.edit-pet-status-card.active-vip {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: #F59E0B;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.18);
+}
+
+.edit-pet-status-card.active-memorial {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3B82F6;
+  box-shadow: 0 3px 12px rgba(59, 130, 246, 0.18);
+}
+
+.admin-switch-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--border-subtle);
+  position: relative;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.admin-switch-track.active-vip {
+  background: #F59E0B;
+}
+
+.admin-switch-track.active-memorial {
+  background: #3B82F6;
+}
+
+.admin-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.admin-switch-track.active .admin-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* Treat Stepper */
+.edit-pet-treat-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.edit-pet-stepper-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edit-pet-stepper-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--accent-gold);
+}
+
+/* Modal Footer */
+.edit-pet-modal-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  .edit-pet-modal-header {
+    padding: 18px 20px;
+  }
+  .edit-pet-modal-body {
+    padding: 18px 20px;
+  }
+  .edit-pet-photo-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .edit-pet-photo-actions {
+    justify-content: center;
+  }
+  .edit-pet-modal-footer {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .edit-pet-modal-footer button {
+    width: 100%;
+  }
+}

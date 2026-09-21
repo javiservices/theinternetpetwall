@@ -100,28 +100,31 @@ export function AdminDashboard({ pets, onPetsChange }) {
   };
 
   // Handle Update Pet
-  const handleSavePet = (updatedPet) => {
-    const updatedList = updatePetInStorage(updatedPet);
+  const handleSavePet = async (updatedPet) => {
+    const updatedList = await apiService.updatePet(updatedPet);
     onPetsChange(updatedList);
     setEditingPet(null);
     showFeedback(`¡Ficha de ${updatedPet.name} actualizada con éxito!`);
   };
 
   // Handle Toggle VIP
-  const handleToggleVip = (petId) => {
-    const updatedList = togglePetVipInStorage(petId);
+  const handleToggleVip = async (petId) => {
+    const current = pets.find((p) => p.id === petId);
+    if (!current) return;
+    const updatedPet = { ...current, isVip: !current.isVip };
+    const updatedList = await apiService.updatePet(updatedPet);
     onPetsChange(updatedList);
-    const pet = updatedList.find((p) => p.id === petId);
-    showFeedback(`${pet.name} ahora es ${pet.isVip ? "VIP Dorado ⭐" : "Estándar"}.`);
+    showFeedback(`${updatedPet.name} ahora es ${updatedPet.isVip ? "VIP Dorado ⭐" : "Estándar"}.`);
   };
 
   // Handle Quick Treats Change
-  const handleTreatsPrompt = (pet) => {
+  const handleTreatsPrompt = async (pet) => {
     const input = prompt(`Modificar contador de chuches para ${pet.name}:`, pet.treats || 0);
     if (input !== null) {
       const val = parseInt(input, 10);
       if (!isNaN(val) && val >= 0) {
-        const updatedList = setPetTreatsInStorage(pet.id, val);
+        const updatedPet = { ...pet, treats: val };
+        const updatedList = await apiService.updatePet(updatedPet);
         onPetsChange(updatedList);
         showFeedback(`Chuches de ${pet.name} actualizadas a ${val}.`);
       }
@@ -129,13 +132,13 @@ export function AdminDashboard({ pets, onPetsChange }) {
   };
 
   // Handle Delete Pet
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingPet) return;
     const petName = deletingPet.name;
-    const updatedList = deletePetFromStorage(deletingPet.id);
+    const updatedList = await apiService.deletePet(deletingPet.id);
     onPetsChange(updatedList);
     setDeletingPet(null);
-    showFeedback(`Mascota "${petName}" eliminada permanentemente.`, "error");
+    showFeedback(`Mascota "${petName}" eliminada del muro.`, "error");
   };
 
   // Backup: Export JSON

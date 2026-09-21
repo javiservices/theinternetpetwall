@@ -1,11 +1,30 @@
-import React, { useState, useEffect } from "react";
-import { X, Save, Star, Bone, Image as ImageIcon, MapPin, User, Award } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  X,
+  Save,
+  Star,
+  Bone,
+  Image as ImageIcon,
+  MapPin,
+  User,
+  Sparkles,
+  Upload,
+  Link as LinkIcon,
+  Copy,
+  Check,
+  Loader2,
+  Plus,
+  Minus,
+  MessageSquare,
+  Heart,
+} from "lucide-react";
 import {
   getAllCountries,
   getStatesForCountry,
   getCitiesForState,
   parsePetLocation,
 } from "../../data/worldLocations";
+import { apiService } from "../../services/api";
 
 export function EditPetModal({ pet, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -28,6 +47,12 @@ export function EditPetModal({ pet, onClose, onSave }) {
   const [countries] = useState(() => getAllCountries("es"));
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showManualUrl, setShowManualUrl] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   // Initialize or re-parse location on mount
   useEffect(() => {
@@ -49,7 +74,6 @@ export function EditPetModal({ pet, onClose, onSave }) {
     const statesList = getStatesForCountry(initialCountryCode);
     setStates(statesList);
 
-    // Find state object
     const matchedState = statesList.find(
       (s) => s.name.toLowerCase() === initialState.toLowerCase() || s.code === initialState
     );
@@ -100,351 +124,576 @@ export function EditPetModal({ pet, onClose, onSave }) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const updated = {
-      ...pet,
-      ...formData,
-      treats: Math.max(0, parseInt(formData.treats, 10) || 0),
-    };
-    onSave(updated);
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const url = await apiService.uploadPetPhoto(file);
+      if (url) {
+        setFormData((prev) => ({ ...prev, photoUrl: url }));
+      }
+    } catch (err) {
+      console.error("Error subiendo foto:", err);
+      alert("No se pudo subir la foto a Supabase. Introduce la URL manualmente.");
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
+  const handleCopyId = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(pet.id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const updated = {
+        ...pet,
+        ...formData,
+        treats: Math.max(0, parseInt(formData.treats, 10) || 0),
+      };
+      await onSave(updated);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const quoteLength = formData.quote?.length || 0;
+
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1200 }}>
       <div
-        className="modal-content"
-        style={{ maxWidth: "720px", maxHeight: "90vh", overflowY: "auto" }}
+        className="modal-content edit-pet-modal-content"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
       >
-        <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar">
-          <X size={18} />
-        </button>
-
-        <div style={{ padding: "4px 44px 20px 0", borderBottom: "1px solid var(--border-subtle)", marginBottom: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "var(--radius-sm)",
-                background: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#FFFFFF",
-              }}
-            >
-              ✏️
+        {/* Modern Header */}
+        <div className="edit-pet-modal-header">
+          <div className="edit-pet-header-left">
+            <div className="edit-pet-header-icon">
+              <Sparkles size={22} />
             </div>
             <div>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 800, fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}>
-                Editar Mascota: {pet.name}
+              <h2 className="edit-pet-header-title">
+                Editar Ficha: {formData.name || pet.name}
               </h2>
-              <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-                Placa Oficial: <strong style={{ color: "var(--accent-gold-dark)" }}>{pet.code}</strong> (ID: {pet.id})
-              </p>
+              <div className="edit-pet-header-badges">
+                <span className="edit-pet-badge-code">
+                  🏷️ {pet.code}
+                </span>
+
+                {formData.isVip ? (
+                  <span className="edit-pet-badge-vip">⭐ VIP</span>
+                ) : (
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Estándar</span>
+                )}
+
+                {formData.isMemorial && (
+                  <span className="edit-pet-badge-memorial">🌈 Memorial</span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCopyId}
+                  className="edit-pet-badge-id"
+                  title="Copiar ID de base de datos"
+                >
+                  {copiedId ? <Check size={12} color="#10B981" /> : <Copy size={12} />}
+                  <span>{copiedId ? "¡Copiado!" : `ID: ${pet.id ? pet.id.slice(0, 8) : ""}...`}</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          <button
+            type="button"
+            className="modal-close-btn"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            style={{ position: "static" }}
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Main Info Row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "16px" }}>
-            <div className="form-group">
-              <label className="form-label">Nombre de la Mascota *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Tipo de Mascota *</label>
-              <select
-                className="form-input"
-                value={formData.type}
-                onChange={(e) => handleChange("type", e.target.value)}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div className="edit-pet-modal-body">
+            {/* 1. Hero Photo Card */}
+            <div className="edit-pet-photo-card">
+              <div
+                className="edit-pet-photo-preview-wrap"
+                onClick={() => fileInputRef.current?.click()}
+                title="Haz clic para cambiar la fotografía"
               >
-                <option value="dog">🐶 Perro</option>
-                <option value="cat">🐱 Gato</option>
-                <option value="other">🐾 Otro animal</option>
-              </select>
-            </div>
+                <img
+                  src={formData.photoUrl || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400"}
+                  alt={formData.name}
+                />
+                <div className="edit-pet-photo-overlay">
+                  {isUploadingPhoto ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Upload size={16} />
+                      <span>Cambiar</span>
+                    </>
+                  )}
+                </div>
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Raza / Descripción *</label>
               <input
-                type="text"
-                className="form-input"
-                value={formData.breed}
-                onChange={(e) => handleChange("breed", e.target.value)}
-                required
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                style={{ display: "none" }}
               />
-            </div>
-          </div>
 
-          {/* Location Fields */}
-          <div style={{ background: "var(--bg-warm)", padding: "16px", borderRadius: "var(--radius-md)", marginBottom: "16px", border: "1px solid var(--border-subtle)" }}>
-            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-              <MapPin size={15} color="#D97706" />
-              <span>Ubicación Geográfica</span>
-            </label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                  País
-                </label>
-                <select
-                  className="form-input"
-                  value={formData.countryCode}
-                  onChange={handleCountryChange}
-                  style={{ fontSize: "0.85rem" }}
-                >
-                  {countries.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <div className="edit-pet-photo-info">
+                <h4 className="edit-pet-photo-title">Fotografía Oficial</h4>
+                <p className="edit-pet-photo-desc">
+                  Sube una foto nítida de la mascota. Se optimiza y aloja automáticamente en el CDN de Supabase con certificado SSL.
+                </p>
 
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                  Provincia / Estado
-                </label>
-                {states.length > 0 ? (
-                  <select
-                    className="form-input"
-                    value={formData.state}
-                    onChange={handleStateChange}
-                    style={{ fontSize: "0.85rem" }}
+                <div className="edit-pet-photo-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    style={{ fontSize: "0.8rem", padding: "6px 14px", height: "34px" }}
                   >
-                    <option value="">-- Selecciona --</option>
-                    {states.map((s) => (
-                      <option key={s.code} value={s.name}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
-                    placeholder="Escribe estado/provincia"
-                    style={{ fontSize: "0.85rem" }}
-                  />
-                )}
-              </div>
+                    {isUploadingPhoto ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        <span>Subiendo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={14} />
+                        <span>Subir Nueva Foto</span>
+                      </>
+                    )}
+                  </button>
 
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                  Localidad / Ciudad
-                </label>
-                {cities.length > 0 ? (
-                  <select
-                    className="form-input"
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    style={{ fontSize: "0.85rem" }}
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setShowManualUrl((prev) => !prev)}
+                    style={{ fontSize: "0.8rem", padding: "6px 12px", height: "34px" }}
                   >
-                    <option value="">-- Selecciona --</option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    placeholder="Escribe ciudad o pueblo"
-                    style={{ fontSize: "0.85rem" }}
-                  />
+                    <LinkIcon size={14} />
+                    <span>{showManualUrl ? "Ocultar URL" : "Editar URL"}</span>
+                  </button>
+                </div>
+
+                {showManualUrl && (
+                  <div style={{ marginTop: "10px" }}>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={formData.photoUrl}
+                      onChange={(e) => handleChange("photoUrl", e.target.value)}
+                      placeholder="https://..."
+                      style={{ fontSize: "0.8rem", padding: "8px 12px" }}
+                    />
+                  </div>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Photo URL & Preview */}
-          <div className="form-group" style={{ marginBottom: "16px" }}>
-            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <ImageIcon size={15} color="#3B82F6" />
-              <span>URL de la Fotografía *</span>
-            </label>
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <input
-                type="url"
-                className="form-input"
-                value={formData.photoUrl}
-                onChange={(e) => handleChange("photoUrl", e.target.value)}
-                required
-                style={{ flex: 1 }}
-              />
-              {formData.photoUrl && (
-                <div style={{ width: "48px", height: "48px", borderRadius: "var(--radius-sm)", overflow: "hidden", border: "2px solid var(--border-subtle)", flexShrink: 0 }}>
-                  <img
-                    src={formData.photoUrl}
-                    alt="Preview"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
+            {/* 2. Core Pet Details */}
+            <div className="edit-pet-section">
+              <div className="edit-pet-section-title">
+                <User size={15} color="#D97706" />
+                <span>Información de la Mascota</span>
+              </div>
+
+              <div className="edit-pet-grid-3">
+                <div className="form-group">
+                  <label className="form-label">Nombre de la Mascota *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    required
+                    placeholder="Ej. Dana"
                   />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Dedication Quote */}
-          <div className="form-group" style={{ marginBottom: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-              <label className="form-label" style={{ margin: 0 }}>Frase o Dedicatoria para el Muro</label>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  color: (formData.quote?.length || 0) >= 180 ? ((formData.quote?.length || 0) >= 200 ? "#EF4444" : "#F59E0B") : "var(--text-muted)",
-                  transition: "color 0.2s ease",
-                }}
-              >
-                {formData.quote?.length || 0} / 200
-              </span>
-            </div>
-            <textarea
-              className="form-input"
-              rows={3}
-              value={formData.quote}
-              maxLength={200}
-              onChange={(e) => handleChange("quote", e.target.value)}
-              placeholder="Dedicatoria memorable..."
-              style={{ resize: "vertical" }}
-            />
-          </div>
+                <div className="form-group">
+                  <label className="form-label">Tipo de Animal *</label>
+                  <select
+                    className="form-input"
+                    value={formData.type}
+                    onChange={(e) => handleChange("type", e.target.value)}
+                  >
+                    <option value="dog">🐶 Perro</option>
+                    <option value="cat">🐱 Gato</option>
+                    <option value="rabbit">🐰 Conejo</option>
+                    <option value="bird">🦜 Ave</option>
+                    <option value="other">🐾 Otro animal</option>
+                  </select>
+                </div>
 
-          {/* Owner & Instagram */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-            <div className="form-group">
-              <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <User size={14} color="#71717A" />
-                <span>Nombre del Humano / Dueño</span>
-              </label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.owner}
-                onChange={(e) => handleChange("owner", e.target.value)}
-                placeholder="Ej. Carlos M."
-              />
+                <div className="form-group">
+                  <label className="form-label">Raza / Descripción *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={formData.breed}
+                    onChange={(e) => handleChange("breed", e.target.value)}
+                    required
+                    placeholder="Ej. Staffy, Mestizo..."
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Usuario de Instagram</label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.instagram}
-                onChange={(e) => handleChange("instagram", e.target.value)}
-                placeholder="Ej. @mipeludo"
-              />
-            </div>
-          </div>
+            {/* 3. Owner & Social */}
+            <div className="edit-pet-section">
+              <div className="edit-pet-section-title">
+                <Heart size={15} color="#E11D48" />
+                <span>Tutor & Redes Sociales</span>
+              </div>
 
-          {/* VIP status & Treats & Memorial */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px", background: "var(--bg-subtle)", padding: "16px", borderRadius: "var(--radius-md)" }}>
-            <div>
-              <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <Bone size={15} color="#D97706" />
-                <span>Contador de Chuches</span>
-              </label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                value={formData.treats}
-                onChange={(e) => handleChange("treats", e.target.value)}
-              />
+              <div className="edit-pet-grid-2">
+                <div className="form-group">
+                  <label className="form-label">Nombre del Humano / Dueño</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={formData.owner}
+                    onChange={(e) => handleChange("owner", e.target.value)}
+                    placeholder="Ej. Javi Labarum"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Usuario de Instagram</label>
+                  <div style={{ position: "relative" }}>
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "var(--text-muted)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      @
+                    </span>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.instagram ? formData.instagram.replace(/^@/, "") : ""}
+                      onChange={(e) => handleChange("instagram", e.target.value ? `@${e.target.value.replace(/^@/, "")}` : "")}
+                      placeholder="javilabarum"
+                      style={{ paddingLeft: "30px" }}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <Star size={15} color="#F59E0B" />
-                <span>Membresía VIP</span>
-              </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 14px",
-                  background: formData.isVip ? "rgba(245, 158, 11, 0.12)" : "var(--bg-surface)",
-                  border: formData.isVip ? "1.5px solid #F59E0B" : "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  cursor: "pointer",
-                  marginTop: "4px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.isVip}
-                  onChange={(e) => handleChange("isVip", e.target.checked)}
-                  style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#D97706" }}
+            {/* 4. Geographic Location */}
+            <div className="edit-pet-section">
+              <div className="edit-pet-section-title">
+                <MapPin size={15} color="#10B981" />
+                <span>Ubicación Geográfica</span>
+              </div>
+
+              <div className="edit-pet-grid-3">
+                <div className="form-group">
+                  <label className="form-label">País</label>
+                  <select
+                    className="form-input"
+                    value={formData.countryCode}
+                    onChange={handleCountryChange}
+                  >
+                    {countries.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Provincia / Estado</label>
+                  {states.length > 0 ? (
+                    <select
+                      className="form-input"
+                      value={formData.state}
+                      onChange={handleStateChange}
+                    >
+                      <option value="">-- Selecciona --</option>
+                      {states.map((s) => (
+                        <option key={s.code} value={s.name}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.state}
+                      onChange={(e) => handleChange("state", e.target.value)}
+                      placeholder="Provincia"
+                    />
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Localidad / Municipio</label>
+                  {cities.length > 0 ? (
+                    <select
+                      className="form-input"
+                      value={formData.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
+                    >
+                      <option value="">-- Selecciona --</option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
+                      placeholder="Localidad"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Dedication Quote */}
+            <div className="edit-pet-section">
+              <div className="edit-pet-section-title">
+                <MessageSquare size={15} color="#6366F1" />
+                <span>Dedicatoria en el Muro</span>
+              </div>
+
+              <div className="edit-pet-quote-card">
+                <textarea
+                  className="edit-pet-quote-textarea"
+                  rows={3}
+                  value={formData.quote}
+                  maxLength={200}
+                  onChange={(e) => handleChange("quote", e.target.value)}
+                  placeholder="Escribe unas palabras de amor, anécdotas o dedicatoria..."
                 />
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: formData.isVip ? "#B45309" : "var(--text-secondary)" }}>
-                  {formData.isVip ? "⭐ Marco VIP" : "Estándar"}
-                </span>
-              </label>
+
+                <div className="edit-pet-char-meter">
+                  <span style={{ color: "var(--text-muted)" }}>
+                    Visible en la ficha pública y el pasaporte
+                  </span>
+                  <span
+                    style={{
+                      color:
+                        quoteLength >= 195
+                          ? "#EF4444"
+                          : quoteLength >= 170
+                          ? "#F59E0B"
+                          : "var(--text-muted)",
+                    }}
+                  >
+                    {quoteLength} / 200
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>🌈</span>
-                <span>Homenaje Memorial</span>
-              </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 14px",
-                  background: formData.isMemorial ? "rgba(59, 130, 246, 0.12)" : "var(--bg-surface)",
-                  border: formData.isMemorial ? "1.5px solid #3B82F6" : "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  cursor: "pointer",
-                  marginTop: "4px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.isMemorial}
-                  onChange={(e) => handleChange("isMemorial", e.target.checked)}
-                  style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#3B82F6" }}
-                />
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: formData.isMemorial ? "#1D4ED8" : "var(--text-secondary)" }}>
-                  {formData.isMemorial ? "🌈 En el Arcoíris" : "En Vida"}
-                </span>
-              </label>
+            {/* 6. Statuses & Treats */}
+            <div className="edit-pet-section">
+              <div className="edit-pet-section-title">
+                <Award size={15} color="#F59E0B" />
+                <span>Membresía, Memorial y Gamificación</span>
+              </div>
+
+              <div className="edit-pet-status-grid">
+                {/* Treat Counter */}
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    border: "1.5px solid var(--border-subtle)",
+                    background: "var(--bg-surface)",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      color: "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    <Bone size={15} color="#D97706" />
+                    <span>Chuches Recibidas</span>
+                  </label>
+
+                  <div className="edit-pet-treat-stepper">
+                    <button
+                      type="button"
+                      className="edit-pet-stepper-btn"
+                      onClick={() =>
+                        handleChange("treats", Math.max(0, (parseInt(formData.treats, 10) || 0) - 1))
+                      }
+                      title="Restar una chuche"
+                    >
+                      <Minus size={15} />
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-input"
+                      value={formData.treats}
+                      onChange={(e) =>
+                        handleChange("treats", Math.max(0, parseInt(e.target.value, 10) || 0))
+                      }
+                      style={{ textAlign: "center", fontWeight: 700, fontSize: "1rem" }}
+                    />
+                    <button
+                      type="button"
+                      className="edit-pet-stepper-btn"
+                      onClick={() =>
+                        handleChange("treats", (parseInt(formData.treats, 10) || 0) + 1)
+                      }
+                      title="Sumar una chuche"
+                    >
+                      <Plus size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* VIP Membership Switch */}
+                <div
+                  className={`edit-pet-status-card ${formData.isVip ? "active-vip" : ""}`}
+                  onClick={() => handleChange("isVip", !formData.isVip)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleChange("isVip", !formData.isVip);
+                    }
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Star size={16} fill={formData.isVip ? "#F59E0B" : "none"} color="#F59E0B" />
+                      <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-primary)" }}>
+                        Membresía VIP
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: formData.isVip ? "#B45309" : "var(--text-muted)" }}>
+                      {formData.isVip ? "⭐ Marco Dorado activo" : "Placa Estándar"}
+                    </span>
+                  </div>
+
+                  <div className={`admin-switch-track ${formData.isVip ? "active active-vip" : ""}`}>
+                    <div className="admin-switch-thumb" />
+                  </div>
+                </div>
+
+                {/* Memorial Rainbow Switch */}
+                <div
+                  className={`edit-pet-status-card ${formData.isMemorial ? "active-memorial" : ""}`}
+                  onClick={() => handleChange("isMemorial", !formData.isMemorial)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleChange("isMemorial", !formData.isMemorial);
+                    }
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "16px" }}>🌈</span>
+                      <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-primary)" }}>
+                        Puente Arcoíris
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: formData.isMemorial ? "#1D4ED8" : "var(--text-muted)" }}>
+                      {formData.isMemorial ? "Eterno en el Arcoíris" : "Compañero en vida"}
+                    </span>
+                  </div>
+
+                  <div className={`admin-switch-track ${formData.isMemorial ? "active active-memorial" : ""}`}>
+                    <div className="admin-switch-thumb" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "16px", borderTop: "1px solid var(--border-subtle)" }}>
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Save size={16} />
-              <span>Guardar Cambios</span>
-            </button>
+          {/* Modern Footer */}
+          <div className="edit-pet-modal-footer">
+            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+              <Sparkles size={14} color="#F59E0B" />
+              <span>Los cambios se sincronizan en tiempo real con Supabase</span>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onClose}
+                disabled={isSubmitting}
+                style={{ padding: "8px 18px", fontSize: "0.88rem" }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSubmitting}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 22px",
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span>Guardar Cambios</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
