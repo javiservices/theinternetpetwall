@@ -201,6 +201,29 @@ function PetWallApp() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Handle modal closes and ensure URL deep-link params are removed
+  const handleCloseSelectedPet = () => {
+    setSelectedPet(null);
+    const sp = new URLSearchParams(location.search);
+    if (sp.has("pet")) {
+      sp.delete("pet");
+      const q = sp.toString();
+      navigate(q ? `${location.pathname}?${q}` : location.pathname, { replace: true });
+    }
+  };
+
+  const handleClosePassport = () => {
+    setPassportPet(null);
+    const sp = new URLSearchParams(location.search);
+    if (sp.has("pet") || sp.has("payment") || sp.has("session_id")) {
+      sp.delete("pet");
+      sp.delete("payment");
+      sp.delete("session_id");
+      const q = sp.toString();
+      navigate(q ? `${location.pathname}?${q}` : location.pathname, { replace: true });
+    }
+  };
+
   return (
     <div className="app-layout">
       {/* Show Consumer Navbar only on public routes */}
@@ -322,10 +345,10 @@ function PetWallApp() {
       {selectedPet && (
         <PetDetailModal
           pet={selectedPet}
-          onClose={() => setSelectedPet(null)}
+          onClose={handleCloseSelectedPet}
           onGiveTreat={handleGiveTreat}
           onViewPassport={(pet) => {
-            setSelectedPet(null);
+            handleCloseSelectedPet();
             setPassportPet(pet);
           }}
           onOpenStory={(pet) => {
@@ -340,7 +363,7 @@ function PetWallApp() {
       {passportPet && (
         <PassportModal
           pet={passportPet}
-          onClose={() => setPassportPet(null)}
+          onClose={handleClosePassport}
           onOpenStory={(pet) => {
             setStoryPet(pet);
           }}

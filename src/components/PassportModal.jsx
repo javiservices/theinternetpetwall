@@ -107,11 +107,21 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
         style={{ maxWidth: "680px" }}
       >
         <button
+          type="button"
           className="modal-close-btn"
-          onClick={onClose}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
           aria-label={t("close_modal")}
         >
-          <X size={18} />
+          <X size={20} />
         </button>
 
         <div style={{ padding: "0 36px", marginBottom: "14px" }}>

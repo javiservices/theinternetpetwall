@@ -112,14 +112,21 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
           >
             {/* Mobile close button on photo corner */}
             <button
+              type="button"
               className="detail-photo-close-btn mobile-only"
               onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onClose();
               }}
               aria-label={t("close_modal")}
             >
-              <X size={16} />
+              <X size={20} />
             </button>
 
             {/* Ambient blurred backdrop fills container with subtle matching mood */}
@@ -185,12 +192,22 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
                 </button>
 
                 <button
-                  onClick={onClose}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                  }}
                   className="detail-icon-btn detail-close-action-btn"
                   title={t("close_modal")}
                   aria-label={t("close_modal")}
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
               </div>
             </div>
