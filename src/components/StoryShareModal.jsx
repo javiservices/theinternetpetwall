@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
-import { X, Download, Share2, Check } from "lucide-react";
+import { X, Download, Share2, Check, Loader2 } from "lucide-react";
 import QRCode from "qrcode";
 import { parsePetLocation } from "../data/worldLocations";
+import { downloadDataUrl, shareImageFile } from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
 
 export function StoryShareModal({ pet, onClose }) {
@@ -9,6 +10,8 @@ export function StoryShareModal({ pet, onClose }) {
   const canvasRef = useRef(null);
   const [dataUrl, setDataUrl] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   const loc = pet ? parsePetLocation(pet.city, pet) : null;
@@ -64,21 +67,35 @@ export function StoryShareModal({ pet, onClose }) {
       ctx.font = "700 24px 'Plus Jakarta Sans', sans-serif";
       ctx.fillText("EL GRAN MOSAICO DIGITAL DE MASCOTAS", W / 2, 190);
 
-      // 3. Load & Draw Pet Photo in rounded circular/squircle frame
+      // 3. Load & Draw Pet Photo safely without canvas taint
       const targetPhoto = pet.photoUrl || pet.photo_url || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800";
-      const petImg = new Image();
-      petImg.crossOrigin = "anonymous";
-      petImg.src = targetPhoto;
-
-      await new Promise((resolve) => {
-        petImg.onload = resolve;
-        petImg.onerror = () => {
-          // Fallback image
-          petImg.src = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800";
-          petImg.onload = resolve;
-          petImg.onerror = resolve;
-        };
-      });
+      let petImg = null;
+      try {
+        petImg = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = async () => {
+            try {
+              const res = await fetch(targetPhoto, { mode: "cors" });
+              if (res.ok) {
+                const blob = await res.blob();
+                const bImg = new Image();
+                bImg.onload = () => resolve(bImg);
+                bImg.onerror = () => resolve(null);
+                bImg.src = URL.createObjectURL(blob);
+                return;
+              }
+            } catch {
+              // fallback
+            }
+            resolve(null);
+          };
+          img.src = targetPhoto;
+        });
+      } catch {
+        petImg = null;
+      }
 
       if (isCancelled) return;
 
@@ -244,9 +261,13 @@ export function StoryShareModal({ pet, onClose }) {
       ctx.letterSpacing = "2px";
       ctx.fillText("✨ INMORTALIZADO EN EL GRAN MURO MUNDIAL ✨", W / 2, footerY + 36);
 
-      const finalUrl = canvas.toDataURL("image/png");
-      setDataUrl(finalUrl);
-      setIsReady(true);
+      try {
+        const finalUrl = canvas.toDataURL("image/png");
+        setDataUrl(finalUrl);
+        setIsReady(true);
+      } catch (canvasErr) {
+        console.error("Story canvas toDataURL error:", canvasErr);
+      }
     }
 
     renderStory();
@@ -256,42 +277,48 @@ export function StoryShareModal({ pet, onClose }) {
     };
   }, [pet]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!dataUrl) return;
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `Story_${pet.name}_${pet.code}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    setIsDownloading(true);
+    const filename = `Story_${pet.name}_${pet.code}.png`;
+    const ok = await downloadDataUrl(dataUrl, filename);
+    setIsDownloading(false);
+    if (ok) {
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    }
   };
 
   const handleShare = async () => {
     const petDirectUrl = `${window.location.origin}/wall?pet=${pet.code}`;
+    const filename = `Story_${pet.name}_${pet.code}.png`;
 
-    if (navigator.share && dataUrl) {
+    if (dataUrl) {
+      const shared = await shareImageFile(
+        dataUrl,
+        filename,
+        `Story de ${pet.name} en The Internet Pet Wall`,
+        `¡Mira la placa oficial de ${pet.name}! Dale una chuche en ${petDirectUrl}`
+      );
+      if (shared) return;
+    }
+
+    if (navigator.share) {
       try {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `Story_${pet.name}_${pet.code}.png`, { type: "image/png" });
         await navigator.share({
           title: `¡Mira a ${pet.name} en The Internet Pet Wall! 🐾`,
           text: `Inmortalicé a ${pet.name} en el gran mosaico digital. ¡Entra a darle una chuche! ${petDirectUrl}`,
           url: petDirectUrl,
-          files: [file],
         });
         return;
       } catch {
         // Fallback to clipboard
-        await navigator.clipboard?.writeText(petDirectUrl);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 3000);
       }
-    } else {
-      await navigator.clipboard?.writeText(petDirectUrl);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 3000);
     }
+
+    await navigator.clipboard?.writeText(petDirectUrl);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 3000);
   };
 
   if (!pet) return null;
@@ -359,11 +386,17 @@ export function StoryShareModal({ pet, onClose }) {
           <button
             className="btn-primary"
             onClick={handleDownload}
-            disabled={!isReady}
+            disabled={!isReady || isDownloading}
             style={{ flex: 1, minWidth: "140px", justifyContent: "center" }}
           >
-            <Download size={16} />
-            <span>{t("story_download_btn")}</span>
+            {isDownloading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : downloadSuccess ? (
+              <Check size={16} />
+            ) : (
+              <Download size={16} />
+            )}
+            <span>{downloadSuccess ? "¡Descargada!" : t("story_download_btn")}</span>
           </button>
 
           <button

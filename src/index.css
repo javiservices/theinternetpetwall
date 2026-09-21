@@ -5830,3 +5830,51 @@ img {
     width: 100%;
   }
 }
+
+/* ==============================================================================
+   COLLAR TAG MODAL & 3x3 CM PRINT MEDIA STYLES
+   ============================================================================== */
+.collar-modal {
+  position: relative;
+  overflow: hidden;
+}
+
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .modal-overlay,
+  .collar-modal,
+  .collar-modal * {
+    visibility: visible !important;
+  }
+  .modal-overlay {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  .collar-modal {
+    position: static !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .modal-close-btn,
+  .modal-drag-indicator,
+  .btn-primary,
+  .btn-secondary,
+  .collar-modal button {
+    display: none !important;
+  }
+}

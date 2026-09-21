@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import { X, Download, Share2, Check, Sparkles, Loader2 } from "lucide-react";
 import { generatePetPassportDataUrl } from "../utils/passportCanvas";
+import { downloadDataUrl, shareImageFile } from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
 
 export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
   const { t } = useTranslation();
   const [passportUrl, setPassportUrl] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // 3D Tilt State
@@ -61,19 +64,27 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
     setGlare({ x: 50, y: 50, opacity: 0 });
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!passportUrl) return;
-    const link = document.createElement("a");
-    link.href = passportUrl;
-    link.download = `${pet.name.replace(/\s+/g, "_")}_Pasaporte_Oficial.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setIsDownloading(true);
+    const filename = `${pet.name.replace(/\s+/g, "_")}_Pasaporte_Oficial.png`;
+    const ok = await downloadDataUrl(passportUrl, filename);
+    setIsDownloading(false);
+    if (ok) {
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    }
   };
 
   const handleShare = async () => {
-    const shareText = `¡He inmortalizado a ${pet.name} en The Internet Pet Wall! 🐾 (${pet.code}):`;
+    const shareText = `¡He inmortalizado a ${pet.name} en The Internet Pet Wall! 🐾 (${pet.code})`;
     const shareUrl = window.location.href;
+    const filename = `${pet.name}_Pasaporte.png`;
+
+    if (passportUrl) {
+      const shared = await shareImageFile(passportUrl, filename, `Pasaporte Oficial de ${pet.name}`, `${shareText} ${shareUrl}`);
+      if (shared) return;
+    }
 
     if (navigator.share) {
       try {
@@ -206,11 +217,17 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
           <button
             className="btn-primary"
             onClick={handleDownload}
-            disabled={loading || !passportUrl}
+            disabled={loading || !passportUrl || isDownloading}
             id="download-passport-btn"
           >
-            <Download size={16} />
-            <span>{t("download_btn")}</span>
+            {isDownloading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : downloadSuccess ? (
+              <Check size={16} />
+            ) : (
+              <Download size={16} />
+            )}
+            <span>{downloadSuccess ? "¡Descargado!" : t("download_btn")}</span>
           </button>
 
           <button
