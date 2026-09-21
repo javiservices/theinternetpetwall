@@ -3,6 +3,7 @@ import { X, Download, Share2, Check, Sparkles, Loader2 } from "lucide-react";
 import { generatePetPassportDataUrl } from "../utils/passportCanvas";
 import { downloadDataUrl, shareImageFile } from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
+import { trackEvent } from "../utils/analytics";
 
 export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
   const { t } = useTranslation();
@@ -72,6 +73,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
     setIsDownloading(false);
     if (ok) {
       setDownloadSuccess(true);
+      trackEvent("download_passport", { code: pet?.code, name: pet?.name });
       setTimeout(() => setDownloadSuccess(false), 3000);
     }
   };

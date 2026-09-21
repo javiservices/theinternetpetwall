@@ -35,6 +35,7 @@ import {
 import { parsePetLocation } from "../../data/worldLocations";
 import { EditPetModal } from "./EditPetModal";
 import { ModalErrorBoundary } from "./ModalErrorBoundary";
+import { AnalyticsTab } from "./AnalyticsTab";
 import { apiService } from "../../services/api";
 
 export function AdminDashboard({ pets, onPetsChange }) {
@@ -48,7 +49,7 @@ export function AdminDashboard({ pets, onPetsChange }) {
   const [backendHealth, setBackendHealth] = useState(null);
 
   // Navigation / Tabs
-  const [activeTab, setActiveTab] = useState("pets"); // 'pets' | 'backup' | 'reports' | 'settings'
+  const [activeTab, setActiveTab] = useState("pets"); // 'pets' | 'analytics' | 'reports' | 'backup' | 'settings'
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -456,6 +457,12 @@ export function AdminDashboard({ pets, onPetsChange }) {
             onClick={() => setActiveTab("pets")}
           >
             📋 Gestión de Mascotas ({totalPets})
+          </button>
+          <button
+            className={`admin-tab-btn ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => setActiveTab("analytics")}
+          >
+            📊 Estadísticas & Tráfico
           </button>
           <button
             className={`admin-tab-btn ${activeTab === "reports" ? "active" : ""}`}
@@ -997,6 +1004,13 @@ export function AdminDashboard({ pets, onPetsChange }) {
               </form>
             </section>
           </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 5: ANALYTICS & TRAFFIC */}
+        {/* ==================================================== */}
+        {activeTab === "analytics" && (
+          <AnalyticsTab petsCount={totalPets} />
         )}
       </main>
 

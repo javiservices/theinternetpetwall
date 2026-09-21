@@ -56,6 +56,9 @@ export function CookieBanner() {
           timestamp: Date.now(),
         })
       );
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("cookie-consent-updated", { detail: consentObj }));
+      }
     } catch (e) {
       console.warn("Could not save cookie consent:", e);
     }

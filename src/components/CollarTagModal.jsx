@@ -23,6 +23,7 @@ import {
   shareImageFile,
 } from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
+import { trackEvent } from "../utils/analytics";
 
 export function CollarTagModal({ pet, onClose }) {
   const { t } = useTranslation();
@@ -128,6 +129,7 @@ export function CollarTagModal({ pet, onClose }) {
     setIsDownloading(false);
     if (ok) {
       setDownloadSuccess(true);
+      trackEvent("download_collar_tag", { type: "single_png", shape, finish, code: pet?.code });
       setTimeout(() => setDownloadSuccess(false), 3000);
     }
   };
@@ -141,6 +143,7 @@ export function CollarTagModal({ pet, onClose }) {
       const ok = await downloadDataUrl(sheetUrl, filename);
       if (ok) {
         setDownloadSuccess(true);
+        trackEvent("download_collar_tag", { type: "sheet_png", shape, finish, code: pet?.code });
         setTimeout(() => setDownloadSuccess(false), 3000);
       }
     } catch (err) {
@@ -161,6 +164,7 @@ export function CollarTagModal({ pet, onClose }) {
       const ok = await downloadSvgString(svgString, filename);
       if (ok) {
         setDownloadSuccess(true);
+        trackEvent("download_collar_tag", { type: "svg_3d", targetSide, shape, code: pet?.code });
         setTimeout(() => setDownloadSuccess(false), 3000);
       }
     } catch (err) {

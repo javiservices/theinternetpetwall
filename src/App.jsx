@@ -25,6 +25,7 @@ import { apiService } from "./services/api";
 import { launchPetConfetti } from "./utils/confetti";
 import { playCelebrationFanfare } from "./utils/soundEffects";
 import { parsePetLocation } from "./data/worldLocations";
+import { trackPageView, trackEvent } from "./utils/analytics";
 
 function PetWallApp() {
   const [pets, setPets] = useState(() => (apiService.isCloudEnabled() ? [] : getSavedPets()));
@@ -177,7 +178,10 @@ function PetWallApp() {
     } else {
       document.title = "The Internet Pet Wall — The Eternal Digital Pet Mosaic";
     }
-  }, [location.pathname, selectedPet]);
+
+    // Cookieless automated pageview tracking
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search, selectedPet]);
 
   // Compute live stats
   const totalPets = pets.length;
@@ -214,6 +218,7 @@ function PetWallApp() {
     if (res && res.cooldown_remaining) {
       setTreatCooldown(petId, res.cooldown_remaining);
     }
+    trackEvent("give_treat", { petId });
   };
 
   // Handle new pet creation (local demo mode fallback)
@@ -222,6 +227,7 @@ function PetWallApp() {
     setPets(updated);
     setIsAddModalOpen(false);
     setPassportPet(newPet);
+    trackEvent("pet_created", { isVip: newPet.isVip, code: newPet.code, name: newPet.name });
   };
 
   const handleNavigateToWall = () => {

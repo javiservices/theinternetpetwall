@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { parsePetLocation } from "../data/worldLocations";
 import { downloadDataUrl, shareImageFile } from "../utils/downloadHelper";
 import { useTranslation } from "../i18n/LanguageContext";
+import { trackEvent } from "../utils/analytics";
 
 export function StoryShareModal({ pet, onClose }) {
   const { t } = useTranslation();
@@ -285,6 +286,7 @@ export function StoryShareModal({ pet, onClose }) {
     setIsDownloading(false);
     if (ok) {
       setDownloadSuccess(true);
+      trackEvent("download_story", { code: pet?.code, name: pet?.name });
       setTimeout(() => setDownloadSuccess(false), 3000);
     }
   };
