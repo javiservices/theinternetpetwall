@@ -21,7 +21,7 @@ export function Hero({ totalPets, totalTreats, totalCountries = 0, onOpenAddPet,
 
         {/* Charity Cause Pill */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 16px", borderRadius: "var(--radius-full)", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", color: "#059669", fontSize: "0.82rem", fontWeight: 700, marginBottom: "28px" }}>
-          <span>🐾 1 Inscripción = 1 Huella de Ayuda · 20% donado a protectoras de animales</span>
+          <span>{t("hero_cause_badge")}</span>
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "36px", flexWrap: "wrap" }}>

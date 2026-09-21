@@ -1,7 +1,10 @@
 import React from "react";
-import { AlertTriangle, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
+import { LanguageContext } from "../../i18n/LanguageContext";
 
 export class ModalErrorBoundary extends React.Component {
+  static contextType = LanguageContext;
+
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -24,6 +27,7 @@ export class ModalErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const t = this.context?.t || ((key, fallback) => (typeof fallback === "string" ? fallback : key));
       return (
         <div className="modal-overlay" onClick={this.handleReset} style={{ zIndex: 1300 }}>
           <div
@@ -52,11 +56,11 @@ export class ModalErrorBoundary extends React.Component {
             </div>
 
             <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "8px", color: "var(--text-primary)" }}>
-              Error al cargar la ventana
+              {t("error_modal_title")}
             </h3>
 
             <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "20px" }}>
-              Se produjo una incidencia inesperada al abrir este editor. El error ha sido registrado en la consola del navegador.
+              {t("error_modal_desc")}
             </p>
 
             {this.state.error?.message && (
@@ -85,7 +89,7 @@ export class ModalErrorBoundary extends React.Component {
                 style={{ padding: "8px 20px" }}
               >
                 <X size={16} />
-                <span>Cerrar Ventana</span>
+                <span>{t("close_modal")}</span>
               </button>
             </div>
           </div>

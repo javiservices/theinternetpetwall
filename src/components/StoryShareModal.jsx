@@ -65,7 +65,7 @@ export function StoryShareModal({ pet, onClose }) {
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "700 24px 'Plus Jakarta Sans', sans-serif";
-      ctx.fillText("EL GRAN MOSAICO DIGITAL DE MASCOTAS", W / 2, 190);
+      ctx.fillText(t("story_headline_canvas"), W / 2, 190);
 
       // 3. Load & Draw Pet Photo safely without canvas taint
       const targetPhoto = pet.photoUrl || pet.photo_url || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800";
@@ -231,15 +231,15 @@ export function StoryShareModal({ pet, onClose }) {
       ctx.textAlign = "left";
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "800 32px 'Plus Jakarta Sans', sans-serif";
-      ctx.fillText("¡Escanea aquí!", qrBoxX + 206, qrBoxY + 74);
+      ctx.fillText(t("story_scan_canvas"), qrBoxX + 206, qrBoxY + 74);
 
       ctx.fillStyle = "#FDE047";
       ctx.font = "800 24px 'Plus Jakarta Sans', sans-serif";
-      ctx.fillText("DALE UNA CHUCHE 🦴", qrBoxX + 206, qrBoxY + 115);
+      ctx.fillText(t("story_treat_canvas"), qrBoxX + 206, qrBoxY + 115);
 
       ctx.fillStyle = "#E2E8F0";
       ctx.font = "600 22px 'Plus Jakarta Sans', sans-serif";
-      ctx.fillText("y visita su placa oficial", qrBoxX + 206, qrBoxY + 152);
+      ctx.fillText(t("story_visit_canvas"), qrBoxX + 206, qrBoxY + 152);
 
       // 8. Bottom Footer (High contrast pill badge)
       const footerW = 740;
@@ -259,7 +259,7 @@ export function StoryShareModal({ pet, onClose }) {
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "800 22px 'Plus Jakarta Sans', sans-serif";
       ctx.letterSpacing = "2px";
-      ctx.fillText("✨ INMORTALIZADO EN EL GRAN MURO MUNDIAL ✨", W / 2, footerY + 36);
+      ctx.fillText(t("story_footer_canvas"), W / 2, footerY + 36);
 
       try {
         const finalUrl = canvas.toDataURL("image/png");
@@ -297,8 +297,8 @@ export function StoryShareModal({ pet, onClose }) {
       const shared = await shareImageFile(
         dataUrl,
         filename,
-        `Story de ${pet.name} en The Internet Pet Wall`,
-        `¡Mira la placa oficial de ${pet.name}! Dale una chuche en ${petDirectUrl}`
+        t("story_share_subject", { name: pet.name }),
+        t("story_share_caption", { name: pet.name, url: petDirectUrl })
       );
       if (shared) return;
     }
@@ -306,8 +306,8 @@ export function StoryShareModal({ pet, onClose }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `¡Mira a ${pet.name} en The Internet Pet Wall! 🐾`,
-          text: `Inmortalicé a ${pet.name} en el gran mosaico digital. ¡Entra a darle una chuche! ${petDirectUrl}`,
+          title: t("story_share_social_title", { name: pet.name }),
+          text: t("story_share_social_desc", { name: pet.name, url: petDirectUrl }),
           url: petDirectUrl,
         });
         return;
@@ -400,7 +400,7 @@ export function StoryShareModal({ pet, onClose }) {
             ) : (
               <Download size={16} />
             )}
-            <span>{downloadSuccess ? "¡Descargada!" : t("story_download_btn")}</span>
+            <span>{downloadSuccess ? t("btn_downloaded") : t("story_download_btn")}</span>
           </button>
 
           <button
@@ -420,7 +420,7 @@ export function StoryShareModal({ pet, onClose }) {
             style={{ width: "100%", justifyContent: "center", height: "42px", marginTop: "4px", fontWeight: 600 }}
           >
             <X size={16} />
-            <span>{t("close_modal") || "Cerrar"}</span>
+            <span>{t("close_modal")}</span>
           </button>
         </div>
       </div>

@@ -173,8 +173,8 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
                 justifyContent: "center",
                 cursor: "pointer",
               }}
-              title={isDark ? "Cambiar a Modo Claro" : "Cambiar a Modo Noche / Constelación"}
-              aria-label="Toggle Theme"
+              title={isDark ? t("theme_light") : t("theme_dark")}
+              aria-label={isDark ? t("theme_light") : t("theme_dark")}
             >
               {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
@@ -184,7 +184,7 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
               <button
                 className="lang-selector-btn"
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
-                aria-label="Seleccionar idioma"
+                aria-label={t("aria_select_language")}
               >
                 <span style={{ fontSize: "1.1rem" }}>{currentLangObj.flag}</span>
                 <span style={{ fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase" }}>
@@ -240,7 +240,7 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
                 alignItems: "center",
                 justifyContent: "center",
               }}
-              aria-label="Toggle Theme"
+              aria-label={isDark ? t("theme_light") : t("theme_dark")}
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -251,7 +251,7 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
                 className="lang-selector-btn"
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
                 style={{ padding: "6px 8px" }}
-                aria-label="Cambiar idioma"
+                aria-label={t("aria_change_language")}
               >
                 <span style={{ fontSize: "1.15rem" }}>{currentLangObj.flag}</span>
                 <ChevronDown size={13} />
@@ -281,7 +281,7 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
             <button
               className="hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-label={mobileMenuOpen ? t("aria_close_menu") : t("aria_open_menu")}
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>

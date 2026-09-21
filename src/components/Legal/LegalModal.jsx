@@ -75,7 +75,7 @@ export function LegalModal({ initialTab = "privacy", onClose }) {
             className="modal-close-btn legal-close-btn"
             onClick={onClose}
             aria-label={t("legal_modal_close")}
-            title="Cerrar (Esc)"
+            title={t("close_modal")}
           >
             <X size={18} />
           </button>
@@ -174,7 +174,7 @@ export function LegalModal({ initialTab = "privacy", onClose }) {
         {/* Modal Footer Actions */}
         <div className="legal-modal-footer">
           <div className="legal-footer-contact">
-            <span>¿Tienes dudas legales? Escríbenos a </span>
+            <span>{t("legal_questions_contact")}{" "}</span>
             <a href="mailto:privacidad@yourpixel.org" className="legal-footer-email">
               privacidad@yourpixel.org
             </a>
@@ -185,10 +185,10 @@ export function LegalModal({ initialTab = "privacy", onClose }) {
               type="button"
               className="btn-secondary legal-print-btn"
               onClick={handlePrint}
-              title="Imprimir o guardar como PDF"
+              title={t("legal_print_title")}
             >
               <Printer size={14} />
-              <span>Imprimir</span>
+              <span>{t("legal_print")}</span>
             </button>
 
             <button
@@ -197,7 +197,7 @@ export function LegalModal({ initialTab = "privacy", onClose }) {
               onClick={onClose}
             >
               <Check size={15} />
-              <span>Entendido y Cerrar</span>
+              <span>{t("legal_understood_close")}</span>
             </button>
           </div>
         </div>

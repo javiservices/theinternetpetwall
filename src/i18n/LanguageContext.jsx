@@ -8,7 +8,7 @@ export const AVAILABLE_LANGUAGES = [
   { code: "de", name: "Deutsch", flag: "🇩🇪" },
 ];
 
-const LanguageContext = createContext({
+export const LanguageContext = createContext({
   language: "en",
   setLanguage: () => {},
   t: (key) => key,
@@ -46,19 +46,23 @@ export function LanguageProvider({ children }) {
     }
   }, [language]);
 
-  const t = (key, fallback = "") => {
+  const t = (key, paramsOrFallback = {}, fallback = "") => {
+    let params = {};
+    let fallbackText = fallback;
+    if (typeof paramsOrFallback === "string") {
+      fallbackText = paramsOrFallback;
+    } else if (typeof paramsOrFallback === "object" && paramsOrFallback !== null) {
+      params = paramsOrFallback;
+    }
+
     const dict = TRANSLATIONS[language] || TRANSLATIONS.en || TRANSLATIONS.es;
-    if (dict && dict[key]) {
-      return dict[key];
+    let str = dict?.[key] || TRANSLATIONS.en?.[key] || TRANSLATIONS.es?.[key] || fallbackText || key;
+    if (typeof str === "string" && Object.keys(params).length > 0) {
+      Object.entries(params).forEach(([k, v]) => {
+        str = str.replaceAll(`{${k}}`, String(v));
+      });
     }
-    // Fallback to EN then ES then key
-    if (TRANSLATIONS.en && TRANSLATIONS.en[key]) {
-      return TRANSLATIONS.en[key];
-    }
-    if (TRANSLATIONS.es && TRANSLATIONS.es[key]) {
-      return TRANSLATIONS.es[key];
-    }
-    return fallback || key;
+    return str;
   };
 
   return (

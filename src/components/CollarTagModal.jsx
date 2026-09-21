@@ -145,7 +145,7 @@ export function CollarTagModal({ pet, onClose }) {
       }
     } catch (err) {
       console.error("Error generating printable sheet:", err);
-      alert("No se pudo generar la plantilla imprimible.");
+      alert(t("collar_sheet_error"));
     } finally {
       setIsDownloading(false);
     }
@@ -165,7 +165,7 @@ export function CollarTagModal({ pet, onClose }) {
       }
     } catch (err) {
       console.error("Error generating SVG 3D:", err);
-      alert("No se pudo generar el modelo vectorial SVG 3D.");
+      alert(t("collar_svg_error"));
     } finally {
       setIsDownloading(false);
     }
@@ -180,8 +180,8 @@ export function CollarTagModal({ pet, onClose }) {
   const handleShare = async () => {
     if (!tagPreviewUrl) return;
     const filename = `Chapa_${pet.name}_3x3cm.png`;
-    const title = `Chapa Oficial para Collar de ${pet.name}`;
-    const text = `Chapa oficial 3x3 cm de ${pet.name} con código QR escaneable de The Internet Pet Wall 🐾`;
+    const title = t("collar_share_title", { name: pet.name });
+    const text = t("collar_share_text", { name: pet.name });
     await shareImageFile(tagPreviewUrl, filename, title, text);
   };
 
@@ -205,7 +205,7 @@ export function CollarTagModal({ pet, onClose }) {
           <div className="modal-drag-bar" />
         </div>
 
-        <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar modal">
+        <button className="modal-close-btn" onClick={onClose} aria-label={t("close_modal")}>
           <X size={18} />
         </button>
 
@@ -226,7 +226,7 @@ export function CollarTagModal({ pet, onClose }) {
             }}
           >
             <Sparkles size={13} />
-            <span>Medida Física Real: 3 x 3 cm (30 mm)</span>
+            <span>{t("collar_badge_real_size")}</span>
           </div>
 
           <h3
@@ -238,10 +238,10 @@ export function CollarTagModal({ pet, onClose }) {
               margin: 0,
             }}
           >
-            Chapa Oficial de Collar: {pet.name}
+            {t("collar_modal_heading", { name: pet.name })}
           </h3>
           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "3px" }}>
-            Diseño metálico oficial con QR de rescate directo a su perfil en el muro.
+            {t("collar_modal_sub")}
           </p>
         </div>
 
@@ -251,21 +251,21 @@ export function CollarTagModal({ pet, onClose }) {
           <div className="collar-toolbar-row">
             {/* Shape selection */}
             <div className="collar-shape-group">
-              <span className="collar-toolbar-label">Forma:</span>
+              <span className="collar-toolbar-label">{t("collar_shape_label")}</span>
               <div className="collar-shape-toggle">
                 <button
                   type="button"
                   onClick={() => setShape("circle")}
                   className={`collar-shape-btn ${shape === "circle" ? "active" : ""}`}
                 >
-                  ⭕ Redonda (Ø 30mm)
+                  {t("collar_shape_circle_btn")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShape("square")}
                   className={`collar-shape-btn ${shape === "square" ? "active" : ""}`}
                 >
-                  ⬛ Placa (3x3 cm)
+                  {t("collar_shape_square_btn")}
                 </button>
               </div>
             </div>
@@ -277,13 +277,13 @@ export function CollarTagModal({ pet, onClose }) {
               className="collar-face-btn"
             >
               <RotateCw size={13} />
-              <span>Ver {viewSide === "front" ? "Reverso (QR)" : "Anverso (Foto)"}</span>
+              <span>{viewSide === "front" ? t("collar_toggle_side_front") : t("collar_toggle_side_back")}</span>
             </button>
           </div>
 
           {/* Row 2: Metallic Finishes */}
           <div className="collar-finish-section">
-            <span className="collar-toolbar-label">Acabado:</span>
+            <span className="collar-toolbar-label">{t("collar_finish_label")}</span>
             <div className="collar-finish-grid">
               <button
                 type="button"
@@ -291,7 +291,7 @@ export function CollarTagModal({ pet, onClose }) {
                 className={`collar-finish-btn ${finish === "gold" ? "active-gold" : ""}`}
               >
                 <span className="collar-finish-dot finish-dot-gold" />
-                <span>Oro 24K</span>
+                <span>{t("collar_finish_gold")}</span>
               </button>
 
               <button
@@ -300,7 +300,7 @@ export function CollarTagModal({ pet, onClose }) {
                 className={`collar-finish-btn ${finish === "silver" ? "active-silver" : ""}`}
               >
                 <span className="collar-finish-dot finish-dot-silver" />
-                <span>Plata Titanio</span>
+                <span>{t("collar_finish_silver")}</span>
               </button>
 
               <button
@@ -309,16 +309,16 @@ export function CollarTagModal({ pet, onClose }) {
                 className={`collar-finish-btn ${finish === "black" ? "active-black" : ""}`}
               >
                 <span className="collar-finish-dot finish-dot-black" />
-                <span>Ónix & Oro</span>
+                <span>{t("collar_finish_black")}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFinish("3dprint")}
                 className={`collar-finish-btn ${finish === "3dprint" ? "active-3dprint" : ""}`}
-                title="Modo relieve de alto contraste en blanco y negro para importar en laminadores 3D (Bambu Studio, Prusa, Cura)"
+                title={t("collar_finish_3dprint_title")}
               >
-                <span>🖨️ Relieve 3D (B/N)</span>
+                <span>{t("collar_finish_3dprint")}</span>
               </button>
             </div>
           </div>
@@ -330,7 +330,7 @@ export function CollarTagModal({ pet, onClose }) {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onClick={toggleSide}
-          title="Haz clic para voltear la chapa"
+          title={t("collar_flip_title")}
           style={{
             position: "relative",
             width: "min(220px, 30vh, 65vw)",
@@ -349,13 +349,13 @@ export function CollarTagModal({ pet, onClose }) {
           {isGenerating ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
               <Loader2 size={32} className="animate-spin" color="#D97706" />
-              <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Acuñando medalla 3D...</span>
+              <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>{t("collar_minting")}</span>
             </div>
           ) : (
             <>
               <img
                 src={tagPreviewUrl}
-                alt={`Chapa de collar de ${pet.name}`}
+                alt={t("collar_modal_heading", { name: pet.name })}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -395,7 +395,7 @@ export function CollarTagModal({ pet, onClose }) {
                 }}
               >
                 <RotateCw size={10} />
-                <span>Pulsa para ver {viewSide === "front" ? "Reverso" : "Anverso"}</span>
+                <span>{viewSide === "front" ? t("collar_tap_flip_front") : t("collar_tap_flip_back")}</span>
               </div>
             </>
           )}
@@ -419,11 +419,11 @@ export function CollarTagModal({ pet, onClose }) {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <ShieldCheck size={16} color="#10B981" />
             <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)" }}>
-              Optimizada para Impresión 3D (Boquilla 0.4 mm) · Cero Desbordes
+              {t("collar_3d_opt_title")}
             </span>
           </div>
           <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-            Medida real: 30 x 30 mm · Trazo mínimo &gt;0.5 mm · Nombre e ID legibles a escala física 1:1
+            {t("collar_3d_opt_desc")}
           </span>
         </div>
 
@@ -444,7 +444,7 @@ export function CollarTagModal({ pet, onClose }) {
             }}
           >
             <Check size={15} />
-            <span>¡Descarga iniciada con éxito!</span>
+            <span>{t("collar_download_success")}</span>
           </div>
         )}
 
@@ -463,7 +463,7 @@ export function CollarTagModal({ pet, onClose }) {
             ) : (
               <Download size={16} />
             )}
-            <span>Descargar Chapa HD</span>
+            <span>{t("collar_download_single")}</span>
           </button>
 
           {/* Button 2: Download Vector SVG for 3D Printing (Active Face) */}
@@ -481,10 +481,10 @@ export function CollarTagModal({ pet, onClose }) {
               color: finish === "3dprint" ? "#2563EB" : "var(--text-primary)",
               fontWeight: 800,
             }}
-            title={`Descarga el modelo vectorial .SVG del ${viewSide === "front" ? "Anverso (Foto y nombre)" : "Reverso (QR de rescate)"} listo para laminar en 3D`}
+            title={t("collar_svg_title")}
           >
             <Box size={16} color={finish === "3dprint" ? "#2563EB" : "currentColor"} />
-            <span>SVG 3D ({viewSide === "front" ? "Anverso" : "Reverso"})</span>
+            <span>{t("collar_download_svg_single", { side: viewSide === "front" ? t("collar_side_front") : t("collar_side_back") })}</span>
           </button>
         </div>
 
@@ -504,10 +504,10 @@ export function CollarTagModal({ pet, onClose }) {
               background: "rgba(59, 130, 246, 0.06)",
               fontWeight: 700,
             }}
-            title="Descarga un único archivo .SVG con ambas caras (Anverso + Reverso) colocadas lado a lado en la cama de impresión 3D"
+            title={t("collar_both_svg_title")}
           >
             <Box size={14} color="#2563EB" />
-            <span>Ambas Caras (.svg)</span>
+            <span>{t("collar_download_svg_both")}</span>
           </button>
 
           <button
@@ -522,10 +522,10 @@ export function CollarTagModal({ pet, onClose }) {
               borderColor: "var(--accent-gold)",
               color: "var(--accent-gold-dark)",
             }}
-            title="Descarga la plantilla con anverso y reverso para recortar y plastificar a tamaño real (3x3 cm)"
+            title={t("collar_sheet_title")}
           >
             <Layers size={14} />
-            <span>Plantilla Papel (3x3)</span>
+            <span>{t("collar_download_sheet")}</span>
           </button>
 
           <button
@@ -535,7 +535,7 @@ export function CollarTagModal({ pet, onClose }) {
             style={{ justifyContent: "center", fontSize: "0.76rem", padding: "9px 8px" }}
           >
             <Printer size={14} />
-            <span>Imprimir</span>
+            <span>{t("collar_print_action")}</span>
           </button>
         </div>
 
@@ -549,7 +549,7 @@ export function CollarTagModal({ pet, onClose }) {
               style={{ flex: 1, justifyContent: "center", fontSize: "0.82rem", padding: "8px 12px" }}
             >
               <Share2 size={15} />
-              <span>Compartir</span>
+              <span>{t("collar_share_action")}</span>
             </button>
           )}
 
@@ -560,7 +560,7 @@ export function CollarTagModal({ pet, onClose }) {
             style={{ flex: 1, justifyContent: "center", fontSize: "0.82rem", padding: "8px 12px" }}
           >
             <X size={15} />
-            <span>Cerrar</span>
+            <span>{t("close_modal")}</span>
           </button>
         </div>
       </div>

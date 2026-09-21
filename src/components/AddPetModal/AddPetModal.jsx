@@ -87,12 +87,12 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type || !file.type.startsWith("image/")) {
-        alert("Por favor, selecciona un archivo de imagen válido (JPG, PNG, WebP).");
+        alert(t("alert_invalid_image"));
         e.target.value = "";
         return;
       }
       if (file.size > 15 * 1024 * 1024) {
-        alert("La imagen es demasiado pesada. El tamaño máximo permitido es 15 MB.");
+        alert(t("alert_image_too_heavy"));
         e.target.value = "";
         return;
       }
@@ -148,18 +148,18 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
     const newPet = {
       id: `pet-${Date.now()}`,
       code: `PET-${nextNum}-${countryObj.code}`,
-      name: name.trim() || "Mascota Amiga",
+      name: name.trim() || t("your_pet"),
       type,
-      breed: breed.trim() || (type === "dog" ? "Perrito adorable" : type === "cat" ? "Gatito lindo" : "Compañero fiel"),
+      breed: breed.trim() || (type === "dog" ? t("type_dog") : type === "cat" ? t("type_cat") : t("type_other")),
       photoUrl: photoUrl || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80",
       city: finalCity,
       state: stateName,
       country: countryObj.name,
       countryCode: countryObj.code,
       locationLabel: finalFullLocation,
-      date: "Hoy",
-      quote: quote.trim() || "Inmortalizado para siempre con todo el amor de su familia.",
-      owner: owner.trim() || "Familia Humana",
+      date: t("date_today"),
+      quote: quote.trim() || t("default_pet_quote"),
+      owner: owner.trim() || t("default_pet_owner"),
       instagram: instagram.trim() ? (instagram.startsWith("@") ? instagram : `@${instagram}`) : "",
       isVip,
       isMemorial,
@@ -200,7 +200,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
         role="dialog"
         aria-modal="true"
       >
-        <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar modal">
+        <button className="modal-close-btn" onClick={onClose} aria-label={t("close_modal")}>
           <X size={18} />
         </button>
 
@@ -240,7 +240,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
             {photoUrl ? (
               <div style={{ textAlign: "center", marginBottom: "20px" }}>
                 <div className="upload-preview-wrap">
-                  <img src={photoUrl} alt="Vista previa" className="upload-preview-img" />
+                  <img src={photoUrl} alt={t("photo_preview_alt")} className="upload-preview-img" />
                 </div>
 
                 {compressionInfo && (
@@ -261,7 +261,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                   >
                     <CheckCircle2 size={13} color="#059669" />
                     <span>
-                      Optimizada a {compressionInfo.compressedSizeKb} KB ({compressionInfo.savingsPercent}% ahorro de espacio)
+                      {t("optimized_to")} {compressionInfo.compressedSizeKb} KB ({compressionInfo.savingsPercent}% {t("savings_of_space")})
                     </span>
                   </div>
                 )}
@@ -284,7 +284,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 </div>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
-                    {isCompressing ? "Comprimiendo y optimizando..." : t("click_upload")}
+                    {isCompressing ? t("compressing_photo") : t("click_upload")}
                   </p>
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
                     {t("upload_hint")}
@@ -492,7 +492,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                         setIsCustomCity(false);
                         setSelectedCity(availableCities[0] || "");
                       }}
-                      title="Volver a lista"
+                      title={t("back_to_list")}
                     >
                       ✕
                     </button>
@@ -530,7 +530,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ej. Carlos G."
+                  placeholder={t("placeholder_owner")}
                   value={owner}
                   onChange={(e) => setOwner(e.target.value)}
                 />
@@ -541,7 +541,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="@usuario"
+                  placeholder={t("placeholder_instagram")}
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
                 />
@@ -559,10 +559,10 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 />
                 <div>
                   <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span>🌈🕊️ Homenaje "Cruzó el Arcoíris" (Memorial)</span>
+                    <span>{t("add_memorial_label")}</span>
                   </span>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", display: "block", marginTop: "2px" }}>
-                    Activa un halo celestial especial para mascotas que ya están en las estrellas.
+                    {t("add_memorial_desc")}
                   </span>
                 </div>
               </label>
@@ -578,10 +578,10 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 />
                 <div>
                   <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span>🎁 Es un regalo para un familiar o amigo</span>
+                    <span>{t("add_gift_label")}</span>
                   </span>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", display: "block", marginTop: "2px" }}>
-                    Genera una tarjeta de regalo digital para que el dueño reciba la sorpresa.
+                    {t("add_gift_desc")}
                   </span>
                 </div>
               </label>
@@ -589,7 +589,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Nombre de la persona homenajeada (ej. Para Marta)"
+                  placeholder={t("add_gift_placeholder")}
                   value={giftRecipient}
                   onChange={(e) => setGiftRecipient(e.target.value)}
                   style={{ marginTop: "10px", fontSize: "0.82rem" }}
@@ -725,7 +725,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
             >
               <img
                 src={photoUrl || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80"}
-                alt={name || "Mascota"}
+                alt={name || t("type_other")}
                 style={{
                   width: "56px",
                   height: "56px",
@@ -737,7 +737,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text-primary)" }}>
-                    {name || "Tu Mascota"}
+                    {name || t("your_pet")}
                   </span>
                   {isVip && (
                     <span
@@ -755,7 +755,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                   )}
                 </div>
                 <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>
-                  {breed || (type === "dog" ? "Perrito" : type === "cat" ? "Gatito" : "Mascota")} • {cityDisplay}
+                  {breed || (type === "dog" ? t("type_dog") : type === "cat" ? t("type_cat") : t("type_other"))} • {cityDisplay}
                 </p>
                 <p
                   style={{
@@ -765,7 +765,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                     margin: "2px 0 0 0",
                   }}
                 >
-                  {isVip ? "★ Pase Golden VIP (Eterno)" : "✓ Pase Estándar Oficial (Eterno)"}
+                  {isVip ? t("tier_summary_vip") : t("tier_summary_std")}
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -773,7 +773,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                   {price}
                 </span>
                 <span style={{ display: "block", fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                  pago único
+                  {t("one_time_payment")}
                 </span>
               </div>
             </div>
@@ -794,10 +794,10 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
               <span style={{ fontSize: "1.3rem" }}>🐾</span>
               <div>
                 <span style={{ fontWeight: 800, fontSize: "0.82rem", color: "#065F46", display: "block" }}>
-                  Causa Solidaria: 1 Inscripción = 1 Huella de Ayuda
+                  {t("cause_box_title")}
                 </span>
                 <span style={{ fontSize: "0.75rem", color: "#047857" }}>
-                  El 20% de tu aportación se dona este mes a protectoras y refugios para alimentar y cuidar a animales sin hogar.
+                  {t("cause_box_desc")}
                 </span>
               </div>
             </div>
@@ -823,7 +823,7 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                 }}
               >
                 <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                  Métodos de pago en pasarela:
+                  {t("gateway_methods_label")}
                 </span>
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                   <span
@@ -861,12 +861,12 @@ export function AddPetModal({ onClose, onPetCreated, currentCount, onOpenLegal }
                       fontWeight: 700,
                     }}
                   >
-                    💳 Tarjetas
+                    {t("gateway_cards_label")}
                   </span>
                 </div>
               </div>
               <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.45 }}>
-                Al pulsar en el botón inferior, accederás a la pasarela cifrada y oficial de <strong>Stripe</strong>. Podrás pagar de forma cómoda e instantánea en 1 clic con <strong>Apple Pay</strong>, <strong>Google Pay</strong> o con tu <strong>tarjeta</strong> bancaria.
+                {t("gateway_stripe_note")}
               </p>
             </div>
 

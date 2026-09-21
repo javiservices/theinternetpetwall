@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { Search, Star, Sparkles, Filter } from "lucide-react";
 import { PetCard } from "./PetCard";
+import { useTranslation } from "../i18n/LanguageContext";
 
 export function PetWallGrid({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
+  const { t } = useTranslation();
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -47,38 +49,38 @@ export function PetWallGrid({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
               className={`filter-btn ${filterType === "all" ? "active" : ""}`}
               onClick={() => setFilterType("all")}
             >
-              Todos ({pets.length})
+              {t("filter_all")} ({pets.length})
             </button>
             <button
               className={`filter-btn ${filterType === "dog" ? "active" : ""}`}
               onClick={() => setFilterType("dog")}
             >
-              🐶 Perros
+              {t("filter_dogs")}
             </button>
             <button
               className={`filter-btn ${filterType === "cat" ? "active" : ""}`}
               onClick={() => setFilterType("cat")}
             >
-              🐱 Gatos
+              {t("filter_cats")}
             </button>
             <button
               className={`filter-btn ${filterType === "other" ? "active" : ""}`}
               onClick={() => setFilterType("other")}
             >
-              🐰 Otros
+              {t("filter_others")}
             </button>
             <button
               className={`filter-btn vip-filter ${filterType === "vip" ? "active" : ""}`}
               onClick={() => setFilterType("vip")}
             >
               <Star size={14} />
-              VIP Dorados
+              {t("filter_vip_gold")}
             </button>
             <button
               className={`filter-btn ${filterType === "loved" ? "active" : ""}`}
               onClick={() => setFilterType("loved")}
             >
-              🦴 Más Queridos
+              {t("filter_loved")}
             </button>
           </div>
 
@@ -87,7 +89,7 @@ export function PetWallGrid({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
             <input
               type="text"
               className="search-input"
-              placeholder="Buscar por nombre, raza o ciudad..."
+              placeholder={t("search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -119,10 +121,10 @@ export function PetWallGrid({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
           >
             <p style={{ fontSize: "2rem", marginBottom: "12px" }}>🔍🐾</p>
             <h3 style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", marginBottom: "8px" }}>
-              No encontramos ninguna mascota con esa búsqueda
+              {t("empty_search_title")}
             </h3>
             <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
-              Prueba con otro término o añade a tu propia mascota al muro por 1€.
+              {t("empty_search_desc")}
             </p>
             <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
               <button
@@ -132,11 +134,11 @@ export function PetWallGrid({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
                   setFilterType("all");
                 }}
               >
-                Limpiar filtros
+                {t("clean_filters")}
               </button>
               <button className="btn-primary" onClick={onOpenAddPet}>
                 <Sparkles size={16} />
-                Inmortalizar Mascota (1€)
+                {t("nav_cta")}
               </button>
             </div>
           </div>

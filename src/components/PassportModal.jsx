@@ -77,19 +77,20 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
   };
 
   const handleShare = async () => {
-    const shareText = `¡He inmortalizado a ${pet.name} en The Internet Pet Wall! 🐾 (${pet.code})`;
+    const shareText = t("passport_share_text", { name: pet.name, code: pet.code });
     const shareUrl = window.location.href;
     const filename = `${pet.name}_Pasaporte.png`;
+    const shareTitle = t("passport_share_title", { name: pet.name });
 
     if (passportUrl) {
-      const shared = await shareImageFile(passportUrl, filename, `Pasaporte Oficial de ${pet.name}`, `${shareText} ${shareUrl}`);
+      const shared = await shareImageFile(passportUrl, filename, shareTitle, `${shareText} ${shareUrl}`);
       if (shared) return;
     }
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Pasaporte Oficial de ${pet.name}`,
+          title: shareTitle,
           text: shareText,
           url: shareUrl,
         });
@@ -104,7 +105,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch {
-      alert("Enlace copiado al portapapeles");
+      alert(t("link_copied_alert"));
     }
   };
 
@@ -153,7 +154,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
         <div style={{ padding: "0 28px", marginBottom: "10px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-gold-dark)", marginBottom: "4px", fontWeight: 700, fontSize: "0.82rem" }}>
             <Sparkles size={15} />
-            <span>{t("doc_verified")} · Efecto Holográfico 3D</span>
+            <span>{t("doc_verified")} · {t("passport_holo_3d")}</span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.45rem", fontWeight: 800, marginBottom: "2px" }}>
@@ -198,7 +199,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             <>
               <img
                 src={passportUrl}
-                alt={`Pasaporte oficial de ${pet.name}`}
+                alt={`${t("passport_of")} ${pet.name}`}
                 className="passport-preview-img"
                 style={{
                   maxHeight: "min(390px, 45vh)",
@@ -241,7 +242,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             ) : (
               <Download size={16} />
             )}
-            <span>{downloadSuccess ? "¡Descargado!" : t("download_btn")}</span>
+            <span>{downloadSuccess ? t("btn_downloaded") : t("download_btn")}</span>
           </button>
 
           <button
@@ -258,10 +259,10 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             <button
               className="btn-secondary"
               onClick={() => onOpenStory(pet)}
-              title="Generar Story 9:16 para Instagram"
+              title={t("story_modal_btn_desc")}
               style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
             >
-              <span>📱 Crear Story</span>
+              <span>{t("story_modal_btn_label")}</span>
             </button>
           )}
 
@@ -269,10 +270,10 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             <button
               className="btn-secondary"
               onClick={() => onOpenCollarTag(pet)}
-              title="Generar Chapa imprimible con QR para collar"
+              title={t("collar_modal_btn_desc")}
               style={{ padding: "9px 14px", fontSize: "0.84rem", justifyContent: "center" }}
             >
-              <span>🏷️ Chapa Collar QR</span>
+              <span>{t("collar_modal_btn_label")}</span>
             </button>
           )}
 
@@ -290,7 +291,7 @@ export function PassportModal({ pet, onClose, onOpenStory, onOpenCollarTag }) {
             }}
           >
             <X size={15} />
-            <span>{t("close_modal") || "Cerrar pasaporte"}</span>
+            <span>{t("close_modal")}</span>
           </button>
         </div>
       </div>

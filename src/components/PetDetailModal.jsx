@@ -17,7 +17,7 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
 
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [reportState, setReportState] = useState("idle"); // 'idle' | 'reporting' | 'reported'
-  const [reportReason, setReportReason] = useState("Foto inapropiada o no permitida");
+  const [reportReason, setReportReason] = useState("photo");
   const [shareFeedback, setShareFeedback] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const [isQuoteExpanded, setIsQuoteExpanded] = useState(false);
@@ -388,10 +388,10 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
                     onChange={(e) => setReportReason(e.target.value)}
                     style={{ fontSize: "0.8rem", padding: "6px 10px", marginBottom: "8px" }}
                   >
-                    <option value="Foto inapropiada o no permitida">{t("report_reason_photo")}</option>
-                    <option value="Lenguaje o dedicatoria ofensiva">{t("report_reason_language")}</option>
-                    <option value="Spam o publicidad">{t("report_reason_spam")}</option>
-                    <option value="Datos incorrectos o suplantación">{t("report_reason_identity")}</option>
+                    <option value="photo">{t("report_reason_photo")}</option>
+                    <option value="language">{t("report_reason_language")}</option>
+                    <option value="spam">{t("report_reason_spam")}</option>
+                    <option value="identity">{t("report_reason_identity")}</option>
                   </select>
                   <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
                     <button
@@ -430,7 +430,7 @@ export function PetDetailModal({ pet, onClose, onGiveTreat, onViewPassport, onOp
                 id="modal-bottom-close-btn"
               >
                 <X size={16} />
-                <span>{t("close_modal") || "Cerrar ficha"}</span>
+                <span>{t("close_modal")}</span>
               </button>
             </div>
           </div>

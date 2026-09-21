@@ -250,7 +250,7 @@ export function FullWallView({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
         <div className="full-wall-header">
           <div className="section-tag" style={{ background: "#FEF3C7", color: "#B45309" }}>
             <Sparkles size={14} />
-            <span>MOSAICO GLOBAL</span>
+            <span>{t("global_mosaic_badge")}</span>
           </div>
           <h1 className="full-wall-title">{t("wall_page_title")}</h1>
           <p className="full-wall-desc">
@@ -278,7 +278,7 @@ export function FullWallView({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
                   className="search-clear-btn-large"
                   onClick={() => handleSearchChange("")}
                   title={t("clean_filters")}
-                  aria-label="Limpiar búsqueda"
+                  aria-label={t("aria_clear_search")}
                 >
                   <X size={15} />
                 </button>
@@ -658,6 +658,7 @@ export function FullWallView({ pets, onSelectPet, onGiveTreat, onOpenAddPet }) {
 
 // Compact Pet Tile (Small footprint ~115px for high-density view)
 function CompactPetTile({ pet, onSelectPet, onGiveTreat }) {
+  const { t } = useTranslation();
   const { isCooldown, formattedTime } = useTreatCooldown(pet?.id);
 
   const handleQuickTreat = (e) => {
@@ -673,7 +674,7 @@ function CompactPetTile({ pet, onSelectPet, onGiveTreat }) {
     <div
       className={`compact-pet-tile ${pet.isVip ? "is-vip vip-tile" : ""}`}
       onClick={() => onSelectPet(pet)}
-      title={`${pet.name} (${pet.breed || "Mascota"}) — ${locationData.flag} ${locationData.fullLabel}`}
+      title={`${pet.name} (${pet.breed || t("type_other")}) — ${locationData.flag} ${locationData.fullLabel}`}
     >
       <img
         src={pet.photoUrl}
@@ -698,8 +699,8 @@ function CompactPetTile({ pet, onSelectPet, onGiveTreat }) {
           className={`compact-tile-treat ${isCooldown ? "is-cooldown" : ""}`}
           onClick={handleQuickTreat}
           disabled={isCooldown}
-          title={isCooldown ? `Disponible en ${formattedTime}` : `Dar chuche a ${pet.name}`}
-          aria-label="Dar chuche"
+          title={isCooldown ? `${t("cooldown_available_in")}: ${formattedTime}` : t("compact_give_treat", { name: pet.name })}
+          aria-label={t("give_treat")}
         >
           {isCooldown ? (
             <>
