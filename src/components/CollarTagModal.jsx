@@ -192,10 +192,11 @@ export function CollarTagModal({ pet, onClose }) {
         style={{
           maxWidth: "580px",
           textAlign: "center",
+          padding: "28px 24px max(32px, env(safe-area-inset-bottom, 24px))",
           background: "var(--bg-surface)",
           border: "1px solid var(--border-color)",
+          borderRadius: "24px",
           boxShadow: "0 25px 60px rgba(0, 0, 0, 0.45)",
-          paddingBottom: "max(32px, env(safe-area-inset-bottom, 24px))",
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -5840,6 +5840,13 @@ img {
   -webkit-overflow-scrolling: touch !important;
 }
 
+@media (max-width: 640px) {
+  .collar-modal {
+    padding: 24px 18px max(36px, env(safe-area-inset-bottom, 24px)) !important;
+    max-height: min(90dvh, calc(100dvh - 24px)) !important;
+  }
+}
+
 @media print {
   body {
     background: #FFFFFF !important;

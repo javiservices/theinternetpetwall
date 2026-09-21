@@ -330,7 +330,7 @@ export function StoryShareModal({ pet, onClose }) {
         style={{
           maxWidth: "480px",
           textAlign: "center",
-          paddingBottom: "max(32px, env(safe-area-inset-bottom, 24px))",
+          padding: "28px 24px max(32px, env(safe-area-inset-bottom, 24px))",
         }}
         onClick={(e) => e.stopPropagation()}
       >
