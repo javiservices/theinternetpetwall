@@ -481,11 +481,11 @@ export function CollarTagModal({ pet, onClose }) {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <ShieldCheck size={16} color="#10B981" />
             <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)" }}>
-              Apta para Impresión 3D (FDM / Resina) · Cero Desbordes
+              Optimizada para Impresión 3D (Boquilla 0.4 mm) · Cero Desbordes
             </span>
           </div>
           <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-            Medida real: 30 x 30 mm · Orejeta para anilla: Ø 3.8 mm · Todo el texto e iconos contenidos 100%
+            Medida real: 30 x 30 mm · Trazo mínimo &gt;0.5 mm · Nombre e ID legibles a escala física 1:1
           </span>
         </div>
 
