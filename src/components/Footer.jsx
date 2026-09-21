@@ -57,17 +57,22 @@ export function Footer({ onOpenAddPet, onOpenLegal }) {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "var(--radius-sm)",
-                background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                overflow: "hidden",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#FFFFFF",
+                boxShadow: "0 3px 10px rgba(245, 158, 11, 0.3)",
+                flexShrink: 0,
               }}
             >
-              🐾
+              <img
+                src="/images/logo.png"
+                alt="The Internet Pet Wall"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
             </div>
             <div>
               <p style={{ fontWeight: 800, fontFamily: "var(--font-heading)", fontSize: "1.05rem" }}>

@@ -62,13 +62,12 @@ export function Navbar({ totalPets, onOpenAddPet, onSelectPet }) {
             onClick={() => setMobileMenuOpen(false)}
           >
             <div className="brand-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="14" r="5" />
-                <circle cx="7.5" cy="8.5" r="2.2" />
-                <circle cx="16.5" cy="8.5" r="2.2" />
-                <circle cx="5" cy="12.5" r="1.8" />
-                <circle cx="19" cy="12.5" r="1.8" />
-              </svg>
+              <img
+                src="/images/logo.png"
+                alt="The Internet Pet Wall"
+                width="38"
+                height="38"
+              />
             </div>
             <span className="brand-title">The Internet Pet Wall</span>
           </Link>
