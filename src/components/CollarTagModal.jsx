@@ -43,17 +43,42 @@ export function CollarTagModal({ pet, onClose }) {
   const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
   const tagWrapRef = useRef(null);
 
+  // In-memory memoized previews for instant switching
+  const previewCacheRef = useRef(new Map());
+
   // Render tag whenever pet, shape, finish, or viewSide changes
   useEffect(() => {
     if (!pet) return;
     let isCurrent = true;
+
+    const cacheKey = `${pet.code || pet.id}_${shape}_${finish}_${viewSide}`;
+    if (previewCacheRef.current.has(cacheKey)) {
+      setTagPreviewUrl(previewCacheRef.current.get(cacheKey));
+      setIsGenerating(false);
+      return;
+    }
+
     setIsGenerating(true);
 
     generateCollarTagDataUrl(pet, { shape, finish, side: viewSide })
       .then((url) => {
         if (isCurrent) {
+          previewCacheRef.current.set(cacheKey, url);
           setTagPreviewUrl(url);
           setIsGenerating(false);
+
+          // Pre-warm opposite side in background for 0ms instant flip
+          const oppSide = viewSide === "front" ? "back" : "front";
+          const oppKey = `${pet.code || pet.id}_${shape}_${finish}_${oppSide}`;
+          if (!previewCacheRef.current.has(oppKey)) {
+            setTimeout(() => {
+              generateCollarTagDataUrl(pet, { shape, finish, side: oppSide })
+                .then((oppUrl) => {
+                  previewCacheRef.current.set(oppKey, oppUrl);
+                })
+                .catch(() => {});
+            }, 60);
+          }
         }
       })
       .catch((err) => {

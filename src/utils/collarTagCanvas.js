@@ -7,46 +7,71 @@ import { parsePetLocation } from "../data/worldLocations.js";
  * laser engraving, and real-life everyday durability.
  */
 
+const safeImageCache = new Map();
+const qrDataUrlCache = new Map();
+
+async function getCachedQrDataUrl(targetUrl) {
+  if (qrDataUrlCache.has(targetUrl)) {
+    return qrDataUrlCache.get(targetUrl);
+  }
+  const promise = QRCode.toDataURL(targetUrl, {
+    width: 400,
+    margin: 1,
+    color: { dark: "#000000", light: "#FFFFFF" },
+    errorCorrectionLevel: "M",
+  });
+  qrDataUrlCache.set(targetUrl, promise);
+  return promise;
+}
+
 async function loadSafeImage(src) {
   if (!src) return null;
   if (typeof document === "undefined") return null;
 
-  // 1. Data URLs or Blobs are already safe and local
-  if (src.startsWith("data:") || src.startsWith("blob:")) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = src;
-    });
+  if (safeImageCache.has(src)) {
+    return safeImageCache.get(src);
   }
 
-  // 2. Fetch with CORS and cache-buster to prevent tainted canvas from browser cache
-  try {
-    const fetchUrl = src.includes("?") ? `${src}&_cb=${Date.now()}` : `${src}?_cb=${Date.now()}`;
-    const response = await fetch(fetchUrl, { mode: "cors" });
-    if (response.ok) {
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+  const promise = (async () => {
+    // 1. Data URLs or Blobs are already safe and local
+    if (src.startsWith("data:") || src.startsWith("blob:")) {
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => resolve(img);
         img.onerror = () => resolve(null);
-        img.src = blobUrl;
+        img.src = src;
       });
     }
-  } catch (err) {
-    console.warn("fetch blob fallback failed, trying direct image:", err);
-  }
 
-  // 3. Direct anonymous image fallback
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
+    // 2. Fetch with CORS once, convert to Blob URL, and cache in memory
+    try {
+      const response = await fetch(src, { mode: "cors" });
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = blobUrl;
+        });
+      }
+    } catch (err) {
+      console.warn("fetch blob fallback failed, trying direct image:", err);
+    }
+
+    // 3. Fallback: direct anonymous image
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  })();
+
+  safeImageCache.set(src, promise);
+  return promise;
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
@@ -517,18 +542,22 @@ export async function generateCollarTagDataUrl(pet, { shape = "circle", finish =
 
   ctx.clearRect(0, 0, size, size);
 
-  // Pre-load pet photo
-  const petPhoto = pet.photoUrl || pet.photo_url ? await loadSafeImage(pet.photoUrl || pet.photo_url) : null;
+  // Load pet photo ONLY if rendering front face
+  let petPhoto = null;
+  if (side === "front") {
+    const photoUrl = pet.photoUrl || pet.photo_url;
+    if (photoUrl) {
+      petPhoto = await loadSafeImage(photoUrl);
+    }
+  }
 
-  // Pre-generate scannable QR (Level M for larger printable pixels)
-  const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://theinternetpetwall.com";
-  const targetUrl = `${origin}/wall?pet=${encodeURIComponent(pet.code || pet.id)}`;
-  const qrDataUrl = await QRCode.toDataURL(targetUrl, {
-    width: 400,
-    margin: 1,
-    color: { dark: "#000000", light: "#FFFFFF" },
-    errorCorrectionLevel: "M",
-  });
+  // Pre-generate scannable QR ONLY if rendering back face
+  let qrDataUrl = null;
+  if (side === "back") {
+    const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://theinternetpetwall.com";
+    const targetUrl = `${origin}/wall?pet=${encodeURIComponent(pet.code || pet.id)}`;
+    qrDataUrl = await getCachedQrDataUrl(targetUrl);
+  }
 
   await drawTagFace(ctx, size / 2, size / 2, size, pet, {
     shape,
