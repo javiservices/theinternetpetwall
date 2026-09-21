@@ -53,10 +53,10 @@ function roundRect(ctx, x, y, width, height, radius) {
  */
 function getTagGeometry(cx, cy, R, shape = "circle") {
   if (shape === "circle") {
-    const earR = R * 0.25;
-    const earCy = cy - R * 0.96;
-    const holeR = R * 0.12;
-    const connectX = R * 0.40;
+    const earR = R * 0.23;
+    const earCy = cy - R * 0.98;
+    const holeR = R * 0.11;
+    const connectX = R * 0.36;
     const connectY = cy - Math.sqrt(R * R - connectX * connectX);
     const alpha = Math.atan2(connectY - cy, connectX);
     const beta = Math.atan2(connectY - cy, -connectX);
@@ -64,9 +64,9 @@ function getTagGeometry(cx, cy, R, shape = "circle") {
   } else {
     const topY = cy - R;
     const bottomY = cy + R;
-    const earR = R * 0.25;
+    const earR = R * 0.23;
     const earCy = topY - earR * 0.35;
-    const holeR = R * 0.12;
+    const holeR = R * 0.11;
     const connectX = earR * 1.5;
     const cornerR = R * 0.28;
     return { earR, earCy, holeR, connectX, topY, bottomY, cornerR, leftX: cx - R, rightX: cx + R };
@@ -83,11 +83,11 @@ function drawCircleTagContour(ctx, cx, cy, R) {
   // 1. Ear arch across top
   ctx.arc(cx, earCy, earR, Math.PI, 0, false);
   // 2. Smooth right fillet to circle
-  ctx.quadraticCurveTo(cx + earR * 1.05, earCy + 10, cx + connectX, connectY);
+  ctx.quadraticCurveTo(cx + earR * 1.05, earCy + (connectY - earCy) * 0.5, cx + connectX, connectY);
   // 3. Main circle sweeping clockwise
   ctx.arc(cx, cy, R, alpha, beta, false);
   // 4. Smooth left fillet back to ear
-  ctx.quadraticCurveTo(cx - earR * 1.05, earCy + 10, cx - earR, earCy);
+  ctx.quadraticCurveTo(cx - earR * 1.05, earCy + (connectY - earCy) * 0.5, cx - earR, earCy);
   ctx.closePath();
 }
 
@@ -387,7 +387,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
       drawSilhouettePlaceholder(ctx, cx, photoCenterY, photoR);
     }
 
-    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Printable with 3 Perimeters)
+    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Perfectly Centered)
     const nameY = photoCenterY + photoR + size * 0.062;
     ctx.fillStyle = finish === "black" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#1C1917";
     ctx.font = `900 ${Math.round(size * 0.088)}px 'Outfit', sans-serif`;
@@ -702,33 +702,32 @@ function escapeXml(unsafe) {
 /**
  * Generate a ready-to-print vector .SVG for 3D slicers (Bambu Studio, PrusaSlicer, Cura, Orca, Tinkercad).
  * Sized 30mm x 35mm with separated Base Body and Raised Relief layers.
+ * Embeds the real pet cameo portrait and provides perfect spacing without text/ear collisions.
  */
 export async function generateCollarTagSvg(pet, { shape = "circle", side = "front" } = {}) {
   const cx = 150;
   const cy = 195;
   const R = 125;
-  const earR = R * 0.25;
-  const holeR = R * 0.12;
+  const earR = 28;
+  const earCy = 55;
+  const holeR = 13.5;
 
   let contourPath = "";
-  let earCy = 0;
 
   if (shape === "circle") {
-    earCy = cy - R * 0.96;
-    const connectX = R * 0.40;
+    const connectX = 40;
     const connectY = cy - Math.sqrt(R * R - connectX * connectX);
     contourPath =
       `M ${cx - earR} ${earCy} ` +
       `A ${earR} ${earR} 0 0 1 ${cx + earR} ${earCy} ` +
-      `Q ${(cx + earR * 1.05).toFixed(2)} ${(earCy + 4).toFixed(2)} ${(cx + connectX).toFixed(2)} ${connectY.toFixed(2)} ` +
+      `Q ${(cx + earR * 1.05).toFixed(2)} 72 ${(cx + connectX).toFixed(2)} ${connectY.toFixed(2)} ` +
       `A ${R} ${R} 0 1 1 ${(cx - connectX).toFixed(2)} ${connectY.toFixed(2)} ` +
-      `Q ${(cx - earR * 1.05).toFixed(2)} ${(earCy + 4).toFixed(2)} ${cx - earR} ${earCy} Z`;
+      `Q ${(cx - earR * 1.05).toFixed(2)} 72 ${cx - earR} ${earCy} Z`;
   } else {
     const topY = cy - R;
     const bottomY = cy + R;
     const leftX = cx - R;
     const rightX = cx + R;
-    earCy = topY - earR * 0.35;
     const connectX = earR * 1.5;
     const cornerR = R * 0.28;
     contourPath =
@@ -743,7 +742,7 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
       `L ${(cx - connectX).toFixed(2)} ${topY} Z`;
   }
 
-  // Ring hole path
+  // Ring hole path (concentric with ear)
   const holePath = `M ${cx - holeR} ${earCy} A ${holeR} ${holeR} 0 1 0 ${cx + holeR} ${earCy} A ${holeR} ${holeR} 0 1 0 ${cx - holeR} ${earCy} Z`;
 
   // QR Code generation if side === "back"
@@ -760,13 +759,112 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
       const pathMatch = qrRaw.match(/<path[^>]*stroke=\"#000000\"[^>]*d=\"([^\"]+)\"/);
       if (pathMatch) {
         qrSvgContent = `
-        <rect x="88" y="108" width="124" height="124" rx="8" fill="#FFFFFF"/>
-        <g transform="translate(92, 112) scale(3.85)">
+        <rect x="96" y="126" width="108" height="108" rx="10" fill="#FFFFFF"/>
+        <g transform="translate(100, 130) scale(3.35)">
           <path d="${pathMatch[1]}" stroke="#000000" stroke-width="1"/>
         </g>`;
       }
     } catch (e) {
       console.warn("Could not generate vector QR for SVG:", e);
+    }
+  }
+
+  // Real pet photo cameo generation for Front
+  let cameoImageSvg = "";
+  if (side === "front") {
+    const photoUrl = pet.photoUrl || pet.photo_url;
+    let petPhoto = null;
+    if (photoUrl && typeof document !== "undefined") {
+      petPhoto = await loadSafeImage(photoUrl);
+    }
+    if (petPhoto && typeof document !== "undefined") {
+      try {
+        const offCanvas = document.createElement("canvas");
+        const cSize = 250;
+        offCanvas.width = cSize;
+        offCanvas.height = cSize;
+        const offCtx = offCanvas.getContext("2d");
+
+        const aspect = petPhoto.width / petPhoto.height;
+        let sw = petPhoto.width;
+        let sh = petPhoto.height;
+        let sx = 0;
+        let sy = 0;
+        if (aspect > 1) {
+          sw = petPhoto.height;
+          sx = (petPhoto.width - petPhoto.height) / 2;
+        } else {
+          sh = petPhoto.width;
+          sy = (petPhoto.height - petPhoto.width) / 2;
+        }
+        offCtx.drawImage(petPhoto, sx, sy, sw, sh, 0, 0, cSize, cSize);
+
+        const imgData = offCtx.getImageData(0, 0, cSize, cSize);
+        const data = imgData.data;
+        const centerOffset = cSize / 2;
+
+        let centerLumTotal = 0;
+        let centerCount = 0;
+        for (let y = 0; y < cSize; y++) {
+          for (let x = 0; x < cSize; x++) {
+            const idx = (y * cSize + x) * 4;
+            const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
+            if (d <= 0.65) {
+              centerLumTotal += 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+              centerCount++;
+            }
+          }
+        }
+        const avgLum = centerCount > 0 ? centerLumTotal / centerCount : 120;
+        const threshold = Math.min(Math.max(avgLum * 0.90, 70), 155);
+
+        for (let y = 0; y < cSize; y++) {
+          for (let x = 0; x < cSize; x++) {
+            const idx = (y * cSize + x) * 4;
+            const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
+            if (d >= 0.98) {
+              data[idx] = 10;
+              data[idx + 1] = 15;
+              data[idx + 2] = 29;
+              data[idx + 3] = 255;
+              continue;
+            }
+            const vignette = d < 0.60 ? 1.0 : Math.cos(((d - 0.60) / 0.38) * Math.PI * 0.5);
+            const rawLum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+            const effectiveLum = rawLum * vignette;
+            const isRelief = effectiveLum >= threshold;
+            data[idx] = isRelief ? 255 : 10;
+            data[idx + 1] = isRelief ? 255 : 15;
+            data[idx + 2] = isRelief ? 255 : 29;
+            data[idx + 3] = 255;
+          }
+        }
+        offCtx.putImageData(imgData, 0, 0);
+        const cameoDataUrl = offCanvas.toDataURL("image/png");
+
+        cameoImageSvg = `
+        <defs>
+          <clipPath id="cameo-photo-clip">
+            <circle cx="${cx}" cy="142" r="42"/>
+          </clipPath>
+        </defs>
+        <image href="${cameoDataUrl}" x="${cx - 42}" y="${142 - 42}" width="84" height="84" clip-path="url(#cameo-photo-clip)" preserveAspectRatio="xMidYMid slice"/>
+        <circle cx="${cx}" cy="142" r="42" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+        `;
+      } catch (err) {
+        console.warn("Could not process cameo for SVG:", err);
+      }
+    }
+
+    if (!cameoImageSvg) {
+      cameoImageSvg = `
+      <circle cx="${cx}" cy="142" r="42" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+      <circle cx="${cx}" cy="152" r="16" fill="#FFFFFF" stroke="none"/>
+      <circle cx="${cx - 16}" cy="134" r="6" fill="#FFFFFF" stroke="none"/>
+      <circle cx="${cx - 6}" cy="126" r="6.5" fill="#FFFFFF" stroke="none"/>
+      <circle cx="${cx + 6}" cy="126" r="6.5" fill="#FFFFFF" stroke="none"/>
+      <circle cx="${cx + 16}" cy="134" r="6" fill="#FFFFFF" stroke="none"/>
+      `;
     }
   }
 
@@ -776,7 +874,7 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
   const contactText = escapeXml(pet.instagram ? `@${pet.instagram.replace(/^@/, "")}` : "theinternetpetwall.com");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="35mm" viewBox="0 0 300 350" version="1.1">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30mm" height="35mm" viewBox="0 0 300 350" version="1.1">
   <title>Chapa Oficial ${petName} (${petCode}) - 30x35mm</title>
   <desc>Optimizado para boquilla 0.4mm FDM. Base: 2.2mm, Relieve: 1.0mm.</desc>
 
@@ -793,34 +891,29 @@ export async function generateCollarTagSvg(pet, { shape = "circle", side = "fron
     ${
       side === "front"
         ? `
-    <!-- Photo Medallion Rim & Cameo -->
-    <circle cx="${cx}" cy="142" r="44" fill="none" stroke="#FFFFFF" stroke-width="4"/>
-    <circle cx="${cx}" cy="152" r="18" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx - 18}" cy="134" r="7" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx - 7}" cy="124" r="7.5" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx + 7}" cy="124" r="7.5" fill="#FFFFFF" stroke="none"/>
-    <circle cx="${cx + 18}" cy="134" r="7" fill="#FFFFFF" stroke="none"/>
+    <!-- Photo Medallion Real Cameo -->
+    ${cameoImageSvg}
 
     <!-- Hero Pet Name (Thick, printable stroke) -->
-    <text x="${cx}" y="206" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', Arial, sans-serif" font-weight="900" font-size="24" letter-spacing="1">${petName}</text>
+    <text x="${cx}" y="206" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif" font-weight="900" font-size="22" letter-spacing="1.5">${petName}</text>
 
     <!-- Code Capsule -->
-    <rect x="85" y="218" width="130" height="20" rx="10" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
-    <text x="${cx}" y="232" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="900" font-size="11" letter-spacing="1.5">${petCode}</text>
+    <rect x="75" y="218" width="150" height="20" rx="10" fill="#000000" stroke="#FFFFFF" stroke-width="2.5"/>
+    <text x="${cx}" y="232.5" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Courier New', Courier, monospace" font-weight="900" font-size="11" letter-spacing="1.5">${petCode}</text>
 
     <!-- City / Country -->
-    <text x="${cx}" y="252" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2">${petCity}</text>
+    <text x="${cx}" y="254" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2.5">${petCity}</text>
     `
         : `
-    <!-- Back Header -->
-    <text x="${cx}" y="92" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="11" letter-spacing="1.2">SOS · ESCÁNAME</text>
+    <!-- Back Header (Safely inside body, well below ear) -->
+    <text x="${cx}" y="112" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="10.5" letter-spacing="1.5">SOS · ESCÁNAME</text>
 
-    <!-- QR Code -->
+    <!-- QR Code Card -->
     ${qrSvgContent}
 
     <!-- Call to action -->
-    <text x="${cx}" y="252" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.5">ESCÁNAME CON EL MÓVIL</text>
-    <text x="${cx}" y="266" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="Courier, monospace" font-weight="800" font-size="8">${contactText}</text>
+    <text x="${cx}" y="254" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="0.8">ESCÁNAME CON EL MÓVIL</text>
+    <text x="${cx}" y="268" text-anchor="middle" fill="#FFFFFF" stroke="none" font-family="'Plus Jakarta Sans', monospace" font-weight="800" font-size="7.5" letter-spacing="1">${contactText}</text>
     `
     }
   </g>
