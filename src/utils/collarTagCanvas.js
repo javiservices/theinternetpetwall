@@ -133,6 +133,9 @@ function drawPhysicalContourPath(ctx, cx, cy, radius, shape = "circle") {
 
 /**
  * High-contrast 3D printable cameo relief for real pet photo.
+ * Applies center-weighted radial vignetting so distracting background clutter
+ * (fences, furniture, sky) fades into the dark medal base, leaving the pet's
+ * face, ears, eyes, and chest sculpted in brilliant white relief!
  */
 function drawMonochromeReliefPhoto(ctx, petPhoto, cx, cy, photoR) {
   const size = Math.round(photoR * 2);
@@ -159,34 +162,63 @@ function drawMonochromeReliefPhoto(ctx, petPhoto, cx, cy, photoR) {
   try {
     const imgData = offCtx.getImageData(0, 0, size, size);
     const data = imgData.data;
+    const centerOffset = size / 2;
 
-    let totalLum = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      totalLum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    // Calculate mean luminance across center region
+    let centerLumTotal = 0;
+    let centerCount = 0;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const idx = (y * size + x) * 4;
+        const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
+        if (d <= 0.65) {
+          centerLumTotal += 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+          centerCount++;
+        }
+      }
     }
-    const avgLum = totalLum / (data.length / 4);
-    const threshold = Math.min(Math.max(avgLum * 0.92, 75), 160);
+    const avgLum = centerCount > 0 ? centerLumTotal / centerCount : 120;
+    const threshold = Math.min(Math.max(avgLum * 0.90, 70), 155);
 
-    for (let i = 0; i < data.length; i += 4) {
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      const isRelief = lum >= threshold;
-      data[i] = isRelief ? 255 : 15;
-      data[i + 1] = isRelief ? 255 : 23;
-      data[i + 2] = isRelief ? 255 : 42;
-      data[i + 3] = 255;
+    // Apply artistic cameo threshold with smooth radial falloff
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const idx = (y * size + x) * 4;
+        const d = Math.hypot(x - centerOffset, y - centerOffset) / centerOffset;
+
+        if (d >= 0.98) {
+          // Outside medal border -> pure black base
+          data[idx] = 10;
+          data[idx + 1] = 15;
+          data[idx + 2] = 29;
+          data[idx + 3] = 255;
+          continue;
+        }
+
+        // Radial falloff: suppress distracting background around perimeter
+        const vignette = d < 0.60 ? 1.0 : Math.cos(((d - 0.60) / 0.38) * Math.PI * 0.5);
+        const rawLum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+        const effectiveLum = rawLum * vignette;
+
+        const isRelief = effectiveLum >= threshold;
+        data[idx] = isRelief ? 255 : 10;
+        data[idx + 1] = isRelief ? 255 : 15;
+        data[idx + 2] = isRelief ? 255 : 29;
+        data[idx + 3] = 255;
+      }
     }
     offCtx.putImageData(imgData, 0, 0);
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, photoR - 3, 0, Math.PI * 2);
+    ctx.arc(cx, cy, photoR - 4, 0, Math.PI * 2);
     ctx.clip();
     ctx.drawImage(offCanvas, cx - photoR, cy - photoR, photoR * 2, photoR * 2);
     ctx.restore();
   } catch {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, photoR - 3, 0, Math.PI * 2);
+    ctx.arc(cx, cy, photoR - 4, 0, Math.PI * 2);
     ctx.clip();
     ctx.filter = "grayscale(100%) contrast(250%) brightness(105%)";
     ctx.drawImage(petPhoto, sx, sy, sw, sh, cx - photoR, cy - photoR, photoR * 2, photoR * 2);
@@ -272,19 +304,28 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
   ctx.restore();
   ctx.save();
 
-  // 3. Raised Outer Beveled Rim (Solid 0.6mm wall)
-  ctx.lineWidth = size * 0.020;
+  // 3. Raised Outer Beveled Rim (Solid, clean perimeter wall)
+  ctx.lineWidth = size * 0.022;
   ctx.strokeStyle = finish === "gold" ? "#D97706" : finish === "silver" ? "#CBD5E1" : finish === "3dprint" ? "#FFFFFF" : "#D4AF37";
   drawPhysicalContourPath(ctx, cx, mainCy, mainR, shape);
   ctx.stroke();
 
-  // Inner concentric inset groove: flows smoothly around ear and perimeter without crossing neck!
-  ctx.lineWidth = size * 0.006;
-  ctx.strokeStyle = finish === "3dprint" ? "rgba(255,255,255,0.35)" : finish === "gold" ? "rgba(180, 83, 9, 0.35)" : "rgba(0,0,0,0.22)";
-  drawPhysicalContourPath(ctx, cx, mainCy, mainR - 22, shape);
-  ctx.stroke();
+  // Subtle inner face groove: frames ONLY the main body without crowding or cutting into the ear!
+  if (finish !== "3dprint") {
+    ctx.lineWidth = size * 0.005;
+    ctx.strokeStyle = finish === "gold" ? "rgba(180, 83, 9, 0.32)" : "rgba(0,0,0,0.20)";
+    if (shape === "circle") {
+      ctx.beginPath();
+      // Sweeps only from right ear fillet around bottom to left ear fillet
+      ctx.arc(cx, mainCy, mainR - 20, geom.alpha, geom.beta, false);
+      ctx.stroke();
+    } else {
+      roundRect(ctx, geom.leftX + 20, geom.topY + 20, mainR * 2 - 40, mainR * 2 - 40, geom.cornerR - 8);
+      ctx.stroke();
+    }
+  }
 
-  // 4. Perforated Collar Suspension Eyelet (Punched hole with clean concentric bevel)
+  // 4. Perforated Collar Suspension Eyelet (Single clean through-hole, concentric with ear)
   ctx.fillStyle = finish === "3dprint" ? "#000000" : "#E2E8F0";
   ctx.beginPath();
   ctx.arc(cx, earCy, holeR, 0, Math.PI * 2);
@@ -346,7 +387,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
       drawSilhouettePlaceholder(ctx, cx, photoCenterY, photoR);
     }
 
-    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Perfectly Centered)
+    // 5B. Pet Name (HERO: Extra Large, Extra Bold, Printable with 3 Perimeters)
     const nameY = photoCenterY + photoR + size * 0.062;
     ctx.fillStyle = finish === "black" ? "#FFFFFF" : finish === "3dprint" ? "#FFFFFF" : "#1C1917";
     ctx.font = `900 ${Math.round(size * 0.088)}px 'Outfit', sans-serif`;
@@ -354,12 +395,11 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     const displayName = (pet.name || "Mascota").toUpperCase().slice(0, 10);
     ctx.fillText(displayName, cx, nameY);
 
-    // 5C. Luxury Enamel ID Capsule (PET-0002-ES)
+    // 5C. Official Identification Capsule (PET-0002-ES)
     const pillY = nameY + size * 0.070;
     const pillW = size * 0.46;
     const pillH = size * 0.065;
 
-    // Enamel background with crisp border
     ctx.fillStyle = finish === "3dprint" ? "#000000" : "#18181B";
     ctx.strokeStyle = finish === "3dprint" ? "#FFFFFF" : finish === "gold" ? "#F59E0B" : finish === "silver" ? "#CBD5E1" : "#D4AF37";
     ctx.lineWidth = finish === "3dprint" ? 3.5 : 2.0;
@@ -372,7 +412,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     ctx.letterSpacing = "2px";
     ctx.fillText(pet.code || "PET-0000-ES", cx, pillY);
 
-    // 5D. Location (Clean, Bold, Spaced, Ample Bottom Margin)
+    // 5D. Location (Clean, Bold, Ample Bottom Margin)
     const loc = parsePetLocation(pet.city, pet);
     const locY = pillY + size * 0.058;
     ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
@@ -397,7 +437,7 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     ctx.letterSpacing = "2px";
     ctx.fillText("SOS · ESCÁNAME", cx, sosY);
 
-    // 6B. High-Contrast QR Code (Level M = ~25x25 large chunky modules)
+    // 6B. High-Contrast QR Code Badge (Rounded ceramic card with metallic border)
     const qrSize = mainR * 0.94;
     const qrY = mainCy - mainR * 0.08;
 
@@ -426,7 +466,8 @@ async function drawTagFace(ctx, cx, cy, size, pet, { shape = "circle", finish = 
     // 6D. Contact / Web Link (Guaranteed inside boundary with >120px margin to bottom rim)
     const linkY = ctaY + size * 0.046;
     ctx.fillStyle = finish === "black" ? "#FDE047" : finish === "3dprint" ? "#FFFFFF" : "#78350F";
-    ctx.font = `800 ${Math.round(size * 0.026)}px monospace`;
+    ctx.font = `800 ${Math.round(size * 0.028)}px 'Plus Jakarta Sans', sans-serif`;
+    ctx.letterSpacing = "1.2px";
     const contactText = pet.instagram ? `@${pet.instagram.replace(/^@/, "")}` : "theinternetpetwall.com";
     ctx.fillText(contactText, cx, linkY);
   }
