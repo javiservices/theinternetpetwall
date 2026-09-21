@@ -224,9 +224,23 @@ export const apiService = {
 
   // 7. Update Pet in Supabase & LocalStorage
   async updatePet(petData) {
-    if (this.isCloudEnabled() && supabase) {
+    let backendSuccess = false;
+    try {
+      const response = await fetch(`/api/admin/pets/${petData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(petData),
+      });
+      if (response.ok) {
+        backendSuccess = true;
+      }
+    } catch (err) {
+      console.warn("Backend update unreachable, trying direct client update:", err);
+    }
+
+    if (!backendSuccess && this.isCloudEnabled() && supabase) {
       try {
-        const { error } = await supabase
+        await supabase
           .from("pets")
           .update({
             name: petData.name,
@@ -245,33 +259,50 @@ export const apiService = {
             treats: Number(petData.treats || 0),
           })
           .eq("id", petData.id);
-
-        if (error) {
-          console.warn("Supabase pet update failed:", error.message);
-        }
       } catch (err) {
-        console.warn("Error updating pet in Supabase:", err);
+        console.warn("Error updating pet in Supabase client:", err);
       }
     }
-    return localAdapter.updatePetInStorage(petData);
+
+    localAdapter.updatePetInStorage(petData);
+
+    if (this.isCloudEnabled()) {
+      const freshList = await this.getPets();
+      return freshList;
+    }
+    return localAdapter.getSavedPets();
   },
 
   // 8. Delete Pet in Supabase & LocalStorage
   async deletePet(petId) {
-    if (this.isCloudEnabled() && supabase) {
-      try {
-        const { error } = await supabase
-          .from("pets")
-          .update({ status: "deleted" })
-          .eq("id", petId);
+    let backendSuccess = false;
+    try {
+      const response = await fetch(`/api/admin/pets/${petId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        backendSuccess = true;
+      }
+    } catch (err) {
+      console.warn("Backend delete unreachable:", err);
+    }
 
-        if (error) {
-          console.warn("Supabase pet soft delete failed:", error.message);
-        }
+    if (!backendSuccess && this.isCloudEnabled() && supabase) {
+      try {
+        await supabase
+          .from("pets")
+          .delete()
+          .eq("id", petId);
       } catch (err) {
-        console.warn("Error deleting pet in Supabase:", err);
+        console.warn("Error deleting pet in Supabase client:", err);
       }
     }
-    return localAdapter.deletePetFromStorage(petId);
+
+    localAdapter.deletePetFromStorage(petId);
+
+    if (this.isCloudEnabled()) {
+      return await this.getPets();
+    }
+    return localAdapter.getSavedPets();
   },
 };

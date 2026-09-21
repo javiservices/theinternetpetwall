@@ -102,10 +102,19 @@ export function AdminDashboard({ pets, onPetsChange }) {
 
   // Handle Update Pet
   const handleSavePet = async (updatedPet) => {
-    const updatedList = await apiService.updatePet(updatedPet);
-    onPetsChange(updatedList);
-    setEditingPet(null);
-    showFeedback(`¡Ficha de ${updatedPet.name} actualizada con éxito!`);
+    try {
+      const updatedList = await apiService.updatePet(updatedPet);
+      if (Array.isArray(updatedList) && updatedList.length > 0) {
+        onPetsChange(updatedList);
+      } else {
+        onPetsChange((prev) => prev.map((p) => (p.id === updatedPet.id ? updatedPet : p)));
+      }
+      setEditingPet(null);
+      showFeedback(`¡Ficha de ${updatedPet.name} actualizada con éxito!`);
+    } catch (err) {
+      console.error("Error saving pet:", err);
+      showFeedback(`Error al actualizar la ficha: ${err.message}`, "error");
+    }
   };
 
   // Handle Toggle VIP
@@ -113,9 +122,17 @@ export function AdminDashboard({ pets, onPetsChange }) {
     const current = pets.find((p) => p.id === petId);
     if (!current) return;
     const updatedPet = { ...current, isVip: !current.isVip };
-    const updatedList = await apiService.updatePet(updatedPet);
-    onPetsChange(updatedList);
-    showFeedback(`${updatedPet.name} ahora es ${updatedPet.isVip ? "VIP Dorado ⭐" : "Estándar"}.`);
+    try {
+      const updatedList = await apiService.updatePet(updatedPet);
+      if (Array.isArray(updatedList) && updatedList.length > 0) {
+        onPetsChange(updatedList);
+      } else {
+        onPetsChange((prev) => prev.map((p) => (p.id === petId ? updatedPet : p)));
+      }
+      showFeedback(`${updatedPet.name} ahora es ${updatedPet.isVip ? "VIP Dorado ⭐" : "Estándar"}.`);
+    } catch (err) {
+      console.error("Error toggling VIP:", err);
+    }
   };
 
   // Handle Quick Treats Change
@@ -125,9 +142,17 @@ export function AdminDashboard({ pets, onPetsChange }) {
       const val = parseInt(input, 10);
       if (!isNaN(val) && val >= 0) {
         const updatedPet = { ...pet, treats: val };
-        const updatedList = await apiService.updatePet(updatedPet);
-        onPetsChange(updatedList);
-        showFeedback(`Chuches de ${pet.name} actualizadas a ${val}.`);
+        try {
+          const updatedList = await apiService.updatePet(updatedPet);
+          if (Array.isArray(updatedList) && updatedList.length > 0) {
+            onPetsChange(updatedList);
+          } else {
+            onPetsChange((prev) => prev.map((p) => (p.id === pet.id ? updatedPet : p)));
+          }
+          showFeedback(`Chuches de ${pet.name} actualizadas a ${val}.`);
+        } catch (err) {
+          console.error("Error updating treats:", err);
+        }
       }
     }
   };
@@ -136,10 +161,20 @@ export function AdminDashboard({ pets, onPetsChange }) {
   const handleConfirmDelete = async () => {
     if (!deletingPet) return;
     const petName = deletingPet.name;
-    const updatedList = await apiService.deletePet(deletingPet.id);
-    onPetsChange(updatedList);
-    setDeletingPet(null);
-    showFeedback(`Mascota "${petName}" eliminada del muro.`, "error");
+    const petId = deletingPet.id;
+    try {
+      const updatedList = await apiService.deletePet(petId);
+      if (Array.isArray(updatedList)) {
+        onPetsChange(updatedList);
+      } else {
+        onPetsChange((prev) => prev.filter((p) => p.id !== petId));
+      }
+      setDeletingPet(null);
+      showFeedback(`Mascota "${petName}" eliminada del muro.`, "error");
+    } catch (err) {
+      console.error("Error deleting pet:", err);
+      showFeedback(`Error al eliminar mascota: ${err.message}`, "error");
+    }
   };
 
   // Backup: Export JSON

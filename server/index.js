@@ -322,7 +322,94 @@ app.post("/api/pets/:id/treat", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// E. SERVE PRODUCTION FRONTEND (SPA)
+// E. ADMIN PET MANAGEMENT (CRUD WITH SERVICE ROLE)
+// ---------------------------------------------------------------------------
+app.put("/api/admin/pets/:id", async (req, res) => {
+  const petId = req.params.id;
+  const petData = req.body;
+
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: "Supabase no conectado en servidor." });
+  }
+
+  try {
+    const updatePayload = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (petData.name !== undefined) updatePayload.name = petData.name;
+    if (petData.type !== undefined) updatePayload.type = petData.type;
+    if (petData.breed !== undefined) updatePayload.breed = petData.breed;
+    if (petData.photoUrl !== undefined || petData.photo_url !== undefined) {
+      updatePayload.photo_url = petData.photoUrl || petData.photo_url;
+    }
+    if (petData.city !== undefined) updatePayload.city = petData.city;
+    if (petData.state !== undefined) updatePayload.state = petData.state;
+    if (petData.country !== undefined) updatePayload.country = petData.country;
+    if (petData.countryCode !== undefined || petData.country_code !== undefined) {
+      updatePayload.country_code = petData.countryCode || petData.country_code;
+    }
+    if (petData.quote !== undefined) updatePayload.quote = petData.quote;
+    if (petData.owner !== undefined) updatePayload.owner = petData.owner;
+    if (petData.instagram !== undefined) updatePayload.instagram = petData.instagram;
+    if (petData.isVip !== undefined || petData.is_vip !== undefined) {
+      updatePayload.is_vip = Boolean(petData.isVip ?? petData.is_vip);
+    }
+    if (petData.isMemorial !== undefined || petData.is_memorial !== undefined) {
+      updatePayload.is_memorial = Boolean(petData.isMemorial ?? petData.is_memorial);
+    }
+    if (petData.treats !== undefined) {
+      updatePayload.treats = Math.max(0, parseInt(petData.treats, 10) || 0);
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("pets")
+      .update(updatePayload)
+      .eq("id", petId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Error updating pet in admin API:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log(`✅ Pet ${petId} (${data.name}) updated successfully via Admin API`);
+    res.json({ success: true, pet: data });
+  } catch (err) {
+    console.error("❌ Exception updating pet in admin API:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/admin/pets/:id", async (req, res) => {
+  const petId = req.params.id;
+
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: "Supabase no conectado en servidor." });
+  }
+
+  try {
+    const { error } = await supabaseAdmin
+      .from("pets")
+      .delete()
+      .eq("id", petId);
+
+    if (error) {
+      console.error("❌ Error deleting pet in admin API:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log(`🗑️ Pet ${petId} deleted successfully via Admin API`);
+    res.json({ success: true, message: "Mascota eliminada correctamente" });
+  } catch (err) {
+    console.error("❌ Exception deleting pet in admin API:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// F. SERVE PRODUCTION FRONTEND (SPA)
 // ---------------------------------------------------------------------------
 const distPath = path.resolve(__dirname, "../dist");
 app.use(express.static(distPath));
