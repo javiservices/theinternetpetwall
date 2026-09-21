@@ -337,6 +337,27 @@ export function CollarTagModal({ pet, onClose }) {
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "linear-gradient(135deg, #1E293B, #020617)", border: "1px solid #D4AF37" }} />
                 <span>Ónix & Oro</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setFinish("3dprint")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "5px 12px",
+                  borderRadius: "20px",
+                  border: finish === "3dprint" ? "2px solid #3B82F6" : "1px solid var(--border-color)",
+                  background: finish === "3dprint" ? "rgba(59, 130, 246, 0.15)" : "var(--bg-surface)",
+                  color: finish === "3dprint" ? "#2563EB" : "var(--text-secondary)",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+                title="Modo relieve de alto contraste en blanco y negro para importar en laminadores 3D (Bambu Studio, Prusa, Cura)"
+              >
+                <span>🖨️ Relieve 3D (B/N)</span>
+              </button>
             </div>
           </div>
         </div>
@@ -417,11 +438,29 @@ export function CollarTagModal({ pet, onClose }) {
           )}
         </div>
 
-        {/* Real Scale indicator badge */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "20px" }}>
-          <ShieldCheck size={14} color="#10B981" />
-          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-            Escala 1:1 lista para imprimir o grabar en metal · Diámetro exacto: 30 mm
+        {/* Real Scale & 3D Print indicator badge */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(16, 185, 129, 0.08)",
+            border: "1px solid rgba(16, 185, 129, 0.25)",
+            padding: "8px 14px",
+            borderRadius: "12px",
+            marginBottom: "16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <ShieldCheck size={16} color="#10B981" />
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)" }}>
+              Apta para Impresión 3D (FDM / Resina) · Cero Desbordes
+            </span>
+          </div>
+          <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
+            Medida real: 30 x 30 mm · Orejeta para anilla: Ø 3.8 mm · Todo el texto e iconos contenidos 100%
           </span>
         </div>
 
