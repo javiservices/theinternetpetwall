@@ -56,7 +56,7 @@ export const apiService = {
           return localAdapter.getSavedPets();
         }
 
-        if (data && data.length > 0) {
+        if (data) {
           return data.map(formatPetFromDB);
         }
       } catch (err) {

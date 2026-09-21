@@ -27,7 +27,7 @@ import { playCelebrationFanfare } from "./utils/soundEffects";
 import { parsePetLocation } from "./data/worldLocations";
 
 function PetWallApp() {
-  const [pets, setPets] = useState(() => getSavedPets());
+  const [pets, setPets] = useState(() => (apiService.isCloudEnabled() ? [] : getSavedPets()));
   const [selectedPet, setSelectedPet] = useState(() => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
@@ -59,7 +59,7 @@ function PetWallApp() {
   useEffect(() => {
     let isMounted = true;
     apiService.getPets().then((loaded) => {
-      if (isMounted && loaded && loaded.length > 0) {
+      if (isMounted && loaded) {
         setPets(loaded);
       }
     });
