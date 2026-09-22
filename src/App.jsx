@@ -139,7 +139,7 @@ function PetWallApp() {
     const petCodeParam = searchParams.get("pet");
     if (petCodeParam) {
       const found = pets.find(
-        (p) => p.code.toLowerCase() === petCodeParam.toLowerCase() || p.id === petCodeParam
+        (p) => p.code?.toLowerCase() === petCodeParam.toLowerCase() || p.id === petCodeParam
       );
       if (found) {
         setSelectedPet(found);
